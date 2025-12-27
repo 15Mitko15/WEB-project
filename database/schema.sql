@@ -1,0 +1,90 @@
+CREATE DATABASE IF NOT EXISTS schedule_db;
+USE schedule_db;
+
+CREATE TABLE roles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP 
+        DEFAULT CURRENT_TIMESTAMP 
+        ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    fn VARCHAR(10) NOT NULL UNIQUE,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP 
+        DEFAULT CURRENT_TIMESTAMP 
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_role_id 
+        FOREIGN KEY (role_id) REFERENCES roles(id)
+);
+
+CREATE TABLE halls (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    hall_number INT NOT NULL,
+    faculty VARCHAR(100) NOT NULL,
+    capacity INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP 
+        DEFAULT CURRENT_TIMESTAMP 
+        ON UPDATE CURRENT_TIMESTAMP,
+    
+    UNIQUE (faculty, hall_number)
+);
+
+CREATE TABLE events (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    event_datetime DATETIME NOT NULL,
+    hall_id INT NOT NULL,
+    presenter_id INT NOT NULL UNIQUE,
+    title VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP 
+        DEFAULT CURRENT_TIMESTAMP 
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_event_hall
+        FOREIGN KEY (hall_id) REFERENCES halls(id),
+
+    CONSTRAINT fk_presenter_id
+        FOREIGN KEY (presenter_id) REFERENCES users(id)
+);
+
+CREATE TABLE interests (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP 
+        DEFAULT CURRENT_TIMESTAMP 
+        ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE attendings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    event_id INT NOT NULL,
+    interest_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP 
+        DEFAULT CURRENT_TIMESTAMP 
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_user_id
+        FOREIGN KEY (user_id) REFERENCES users(id),
+
+    CONSTRAINT fk_event_id
+        FOREIGN KEY (event_id) REFERENCES events(id),
+    
+    CONSTRAINT fk_interest_id
+        FOREIGN KEY (interest_id) REFERENCES interests(id),
+    
+    UNIQUE (user_id, event_id)
+);
