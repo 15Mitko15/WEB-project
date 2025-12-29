@@ -27,17 +27,25 @@ CREATE TABLE users (
         FOREIGN KEY (role_id) REFERENCES roles(id)
 );
 
+CREATE TABLE faculties (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE
+);
+
 CREATE TABLE halls (
     id INT AUTO_INCREMENT PRIMARY KEY,
     hall_number INT NOT NULL,
-    faculty VARCHAR(100) NOT NULL,
+    faculty_id INT NOT NULL,
     capacity INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP 
         DEFAULT CURRENT_TIMESTAMP 
         ON UPDATE CURRENT_TIMESTAMP,
     
-    UNIQUE (faculty, hall_number)
+    CONSTRAINT fk_halls_faculty
+        FOREIGN KEY (faculty_id) REFERENCES faculties(id),
+
+    UNIQUE (faculty_id, hall_number)
 );
 
 CREATE TABLE events (
@@ -46,6 +54,7 @@ CREATE TABLE events (
     hall_id INT NOT NULL,
     presenter_id INT NOT NULL UNIQUE,
     title VARCHAR(255) NOT NULL,
+    event_description VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP 
         DEFAULT CURRENT_TIMESTAMP 
