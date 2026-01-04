@@ -1,5 +1,5 @@
-import { LocalStorageServer } from "./local-storage-service";
-import { decodeJwt } from "./jwt-decode-service";
+import { LocalStorageServer } from "./local-storage-service.js";
+import { decodeJwt } from "./jwt-decode-service.js";
 
 // This information should be coming from the backend
 export const LOCAL_STORAGE_USER = "some-user";
@@ -16,9 +16,10 @@ class UserInfoService {
     this.handler = handler;
   }
 
-  save(token) {
-    const user = this.getUserFromToken(token);
-    this.storage.set(token);
+  // remove token related stuff for now
+  save(user) {
+    // const user = this.getUserFromToken(token);
+    this.storage.set(user);
     this.handler?.(user);
   }
 
@@ -34,14 +35,16 @@ class UserInfoService {
   get initialUser() {
     const token = this.storage.get();
     if (!token) return null;
+
+    console.log(token);
     return this.getUserFromToken(token);
   }
 
-  getUserFromToken(token) {
-    const decoded = decodeJwt(token);
+  // Remove token for now
+  getUserFromToken(user) {
     return {
-      userId: decoded.userId,
-      name: decoded.name,
+      // userId: user.userId,
+      name: user.name,
     };
   }
 
@@ -57,14 +60,14 @@ class UserInfoService {
     }
   }
 
-  requireValidSession() {
-    const token = this.storage.get();
-    if (!this.isTokenValid(token)) {
-      this.clear();
-      return null;
-    }
-    return this.getUserFromToken(token);
-  }
+  // requireValidSession() {
+  //   const token = this.storage.get();
+  //   if (!this.isTokenValid(token)) {
+  //     this.clear();
+  //     return null;
+  //   }
+  //   return this.getUserFromToken(token);
+  // }
 }
 
 export const userInfoService = new UserInfoService();

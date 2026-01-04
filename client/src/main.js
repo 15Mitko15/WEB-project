@@ -1,9 +1,5 @@
-import { renderHome } from "./pages/home.js";
+import { app } from "./app.js";
 
-const app = document.getElementById("app");
+const appEl = document.getElementById("app");
 
-function init() {
-  renderHome(app);
-}
-
-init();
+app(appEl);

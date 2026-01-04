@@ -1,34 +1,27 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { userInfoService } from "../services/user-info-service";
+import { userInfoService } from "../services/user-info-service.js";
 
-// undefined = still loading
-// null = not authenticated
-// object = authenticated user
-const CurrentUserContext = createContext(undefined);
+let currentUser = null;
+let initialized = false;
+const listeners = new Set();
 
-export function CurrentUserProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const initialUser = userInfoService.initialUser;
-    setUser(initialUser);
-    setLoading(false);
-
-    userInfoService.setHandler(setUser);
-
-    return () => {
-      userInfoService.setHandler(null);
-    };
-  }, []);
-
-  return (
-    <CurrentUserContext.Provider value={loading ? undefined : user}>
-      {children}
-    </CurrentUserContext.Provider>
-  );
+export function getCurrentUser() {
+  return currentUser;
 }
 
-export function useCurrentUser() {
-  return useContext(CurrentUserContext);
+export function subscribeCurrentUser(listener) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function setCurrentUser(user) {
+  currentUser = user;
+  for (const fn of listeners) fn(user);
+}
+
+export function initCurrentUser() {
+  if (initialized) return;
+  initialized = true;
+
+  currentUser = userInfoService.initialUser;
+  userInfoService.setHandler(setCurrentUser);
 }

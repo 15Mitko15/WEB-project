@@ -1,0 +1,84 @@
+.btn {
+  appearance: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.95rem;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease,
+    transform 80ms ease;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn--sm {
+  padding: 6px 10px;
+  font-size: 0.9rem;
+}
+.btn--md {
+  padding: 8px 12px;
+}
+.btn--lg {
+  padding: 10px 14px;
+  font-size: 1rem;
+}
+
+/* Main action */
+.btn--primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+.btn--primary:hover {
+  background: var(--secondary);
+  border-color: var(--secondary);
+}
+
+/* Secondary action */
+.btn--secondary {
+  background: var(--surface);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.btn--secondary:hover {
+  background: rgba(37, 99, 235, 0.08);
+}
+
+/* Third action */
+.btn--tertiary {
+  background: var(--tertiary);
+  border-color: var(--tertiary);
+  color: #fff;
+}
+.btn--tertiary:hover {
+  filter: brightness(0.95);
+}
+
+/* Ghost */
+.btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--primary);
+}
+.btn--ghost:hover {
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.18);
+}
+
+/* Danger */
+.btn--danger {
+  background: var(--error);
+  border-color: var(--error);
+  color: #fff;
+}
+.btn--danger:hover {
+  filter: brightness(0.95);
+}

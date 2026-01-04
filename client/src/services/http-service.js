@@ -5,12 +5,12 @@ import {
   NotFoundError,
   ServerError,
   ValidationError,
-} from "../errors";
-import { authService } from "./auth-service";
-import { userInfoService } from "./user-info-service";
+} from "../errors.js";
+import { authService } from "./auth-service.js";
+import { userInfoService } from "./user-info-service.js";
 
 // HARDCODING SOME BASE URL - need to get that info from the backend
-BASE_URL = "http://localhost:3001";
+const BASE_URL = "http://localhost:3001";
 
 class HTTPService {
   get(path, options) {

@@ -34,20 +34,24 @@ export class AuthService {
   async login(email, password) {
     const passwordToSend = password;
 
-    const data = await http.post(ENDPOINTS.login, {
-      body: {
-        email,
-        password: passwordToSend,
-      },
-    });
+    // Commenting for now in order to be able to pseudo login
+    // const data = await http.post(ENDPOINTS.login, {
+    //   body: {
+    //     email,
+    //     password: passwordToSend,
+    //   },
+    // });
 
-    if (!data?.token) {
-      throw new Error("Login failed: no token returned");
-    }
+    // if (!data?.token) {
+    //   throw new Error("Login failed: no token returned");
+    // }
 
-    userInfoService.save(data.token);
+    // userInfoService.save(data.token);
 
-    return userInfoService.getUserFromToken(data.token);
+    // return userInfoService.getUserFromToken(data.token);
+    // Just return them as they are
+    userInfoService.save({ name: "MITAKA" });
+    return { name: "MITAKA" };
   }
 
   async loadSession() {

@@ -1,17 +1,21 @@
-import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { useCurrentUser } from "../contexts/current-user-context";
+import { userInfoService } from "../services/user-info-service.js";
+import { getCurrentUser } from "../contexts/current-user-context.js";
 
-function NavigateToLogin() {
-  const location = useLocation();
-  return <Navigate to="/login" state={{ location: location.pathname }} />;
-}
+export function PrivateOutlet(rootEl, renderChild) {
+  // check session lazily on navigation
+  // Remove token check
+  // const user = userInfoService.userInfoService.requireValidSession()v
+  const user = userInfoService.initialUser;
 
-export function PrivateOutlet() {
-  const user = useCurrentUser();
+  console.log("initial user", user);
 
-  if (user === undefined) {
-    return <div>Loading...</div>;
+  if (!user) {
+    // clear stale data and redirect
+    userInfoService.clear();
+    window.location.hash = "#/login";
+    return;
   }
 
-  return user ? <Outlet /> : <NavigateToLogin />;
+  // user is authenticated → continue rendering
+  renderChild();
 }
