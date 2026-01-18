@@ -52,9 +52,9 @@ CREATE TABLE events (
     id INT AUTO_INCREMENT PRIMARY KEY,
     event_datetime DATETIME NOT NULL,
     hall_id INT NOT NULL,
-    presenter_id INT NOT NULL UNIQUE,
+    presenter_id INT NOT NULL,
     title VARCHAR(255) NOT NULL,
-    event_description VARCHAR(255) NOT NULL,
+    event_description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP 
         DEFAULT CURRENT_TIMESTAMP 
