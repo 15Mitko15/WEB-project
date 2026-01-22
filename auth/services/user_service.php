@@ -35,6 +35,12 @@ class User{
 		$this->role_id = $role_id;
 	}
 
+	public function get_id(): int{
+
+		return $this->id;
+
+	}
+
 	public function get_email(): string{
 
 		return $this->email;
@@ -51,9 +57,13 @@ class User{
 
 //TO DO for User: make function to give only the needed values as ?array? for the frontend
 
-function find_user_by_email($email): User{
+function find_user_by_email($email, $conn): User{
 
-	$sql = "SELECT * FROM USERS";
+	$sql = "SELECT * FROM USERS WHERE email LIKE '$email'";
+
+	// $query = $conn->prepare($sql);
+
+	// $query->execute();
 
 	$query = $conn->query($sql) or die("failed!"); //CHANGE WITH THE MORE APROPRIATE METHODES OF APROACH
 
@@ -61,41 +71,81 @@ function find_user_by_email($email): User{
 
 	//$foundUser = false;
 
-	while($row = $query->fetch()){
+	//$is_empty = true;
 
-		if($row[1] == $email){
+	if($query->rowCount() > 0){
 
-			$id = $row[0];
+		$row = $query->fetch();
 
-			//$email = $email;
+		$id = $row[0];
 
-			$fn = $row[2];
+		//$email = $email;
 
-			$first_name = $row[3];
+		$fn = $row[2];
 
-			$last_name = $row[4];
+		$first_name = $row[3];
 
-			$password_hash = $row[5];
+		$last_name = $row[4];
 
-			$role_id = $row[6];
+		$password_hash = $row[5];
 
-			$current_user = new User($id, $email, $fn, $first_name, $last_name, $password_hash, $role_id);
+		$role_id = $row[6];
 
-			return current_user;
+		$current_user = new User($id, $email, $fn, $first_name, $last_name, $password_hash, $role_id);
 
-		}
-
-		else {
-
-			return null;
-
-		}
+		return $current_user;
 
 	}
 
+	else{
+
+		$invalid_user = new User(-1, "no_email", "-1", "no_name", "no_name", "no_password", "-1");
+
+		return $invalid_user;
+
+	}
+
+	// while($row = $query->fetch()){
+
+	// 	$is_empty = false;
+
+	// 	if($row[1] == $email){
+
+	// 		$id = $row[0];
+
+	// 		//$email = $email;
+
+	// 		$fn = $row[2];
+
+	// 		$first_name = $row[3];
+
+	// 		$last_name = $row[4];
+
+	// 		$password_hash = $row[5];
+
+	// 		$role_id = $row[6];
+
+	// 		$current_user = new User($id, $email, $fn, $first_name, $last_name, $password_hash, $role_id);
+
+	// 		return $current_user;
+
+	// 	}
+
+	// 	else {
+
+	// 		$invalid_user = new User(-1, "no_email", "-1", "no_name", "no_name", "no_password", "-1");
+
+	// 		return $invalid_user;
+
+	// 	}
+
+	// }
+
 }
 
-function login(User $currentUser, string $password_input): void{//DO MORE TWEAKING LATER
+function login(User $current_user, string $password_input): void{//DO MORE TWEAKING LATER
+
+	$password_input_hash = password_hash($password_input, PASSWORD_DEFAULT);
 
 	if(password_verify($password_input, $current_user->get_password_hash())){
 
@@ -117,28 +167,31 @@ function login(User $currentUser, string $password_input): void{//DO MORE TWEAKI
 
 }
 
-function register(string $name, string $email, string $password_input): void{
+function register(string $name, string $email, string $password_input, $conn): void{
 
 	$sql = "SELECT MAX(id) FROM USERS";
 
-	$max_id = $conn->query($sql) or die("failed!"); //CHANGE WITH THE MORE APROPRIATE METHODES OF APROACH
+	//$max_id = $conn->query($sql) or die("failed!"); //CHANGE WITH THE MORE APROPRIATE METHODES OF APROACH
 
-	$new_id = $max_id + 1;
+	//$new_id = $max_id + 1;
 
-	$new_email = $email;
+	//$new_email = $email;
 
 	$name_arr = explode(" ", $name);
 
-	$new_fn = "12345"; //ONLY A PLACEHOLDER CHANGE LATER
+	$new_fn = "12347"; //ONLY A PLACEHOLDER CHANGE LATER (currently has to be manualy changed for each new entry)
 
-	$new_first_name = $name[0];
+	$new_first_name = $name_arr[0];
 
-	$new_last_name = $name[1];
+	$new_last_name = $name_arr[1];
 
 	$new_password_hash = password_hash($password_input, PASSWORD_DEFAULT);
 
 	$sql = "INSERT INTO USERS (id, email, fn, first_name, last_name, password_hash, role_id, created_at, updated_at)
-			VALUES ('$new_id', '$new_email', '$new_fn', '$new_first_name', '$new_last_name', '$new_password_hash', current_timestamp(), current_timestamp())";
+			VALUES (null, '$email', '$new_fn', '$new_first_name', '$new_last_name', '$new_password_hash', '1', current_timestamp(), current_timestamp())";
+
+	$conn->query($sql) or die("failed!");
+
 }
 
 ?>

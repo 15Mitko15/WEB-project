@@ -19,7 +19,7 @@ $router->add($index_home_dir . "login", function() {
 
 	require "login.php";
 
-	require "services/user_service.php";
+	//require "services/user_service.php";
 
 	//echo "we logged in";
 	//header("Location: " . $index_home_dir . "test_login.php");
@@ -29,7 +29,7 @@ $router->add($index_home_dir . "register", function() {
 
 	require "register.php";
 
-	require "services/user_service.php";
+	//require "services/user_service.php";
 
 });
 

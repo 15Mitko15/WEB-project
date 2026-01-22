@@ -2,6 +2,8 @@
 
 //echo "this is register.php";
 
+require "services/user_service.php";
+
 if(isset($_POST)){
 
 	$data = file_get_contents("php://input");
@@ -21,7 +23,7 @@ if(isset($_POST)){
 
 	$username = "root";
 
-	$password = "";
+	$password = "1111";
 
 	//MOVE THOSE^ 4 INTO .env
 
@@ -33,11 +35,11 @@ if(isset($_POST)){
 
 		$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION); // set the PDO error mode to exception
 
-		$current_user = find_user_by_email($email);
+		$current_user = find_user_by_email($email, $conn);
 
-		if($current_user == null){
+		if($current_user->get_id() == -1){
 
-			register($name, $email, $password_input);
+			register($name, $email, $password_input, $conn);
 
 		}
 

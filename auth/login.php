@@ -2,6 +2,8 @@
 
 //echo "this is login.php";
 
+require "services/user_service.php";
+
 if(isset($_POST)){
 
 	$data = file_get_contents("php://input");
@@ -19,7 +21,7 @@ if(isset($_POST)){
 
 	$username = "root";
 
-	$password = "";
+	$password = "1111";
 
 	//MOVE THOSE^ 4 INTO .env
 
@@ -27,13 +29,13 @@ if(isset($_POST)){
 
 		//$conn = new PDO("mysql:host=$servername", $username, $password);
 
-		$conn = new PDO("mysql:host=$servername;dbname=$database", $username, $password); //we are for some reason failing here
+		$conn = new PDO("mysql:host=$servername;dbname=schedule_db", $username, $password); //we are for some reason failing here
 
 		$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION); // set the PDO error mode to exception
 
-		$current_user = find_user_by_email($email);
+		$current_user = find_user_by_email($email, $conn);
 
-		if($current_user == null){
+		if($current_user->get_id() == -1){
 
 			echo "Incorrect email or password!";
 
@@ -41,7 +43,7 @@ if(isset($_POST)){
 
 		else{
 
-			login($current_user, $password_input);
+			login($current_user, $password_input);//YOU FORGOT TO HASH IT (or hash it in the login() idc)
 
 		}
 
