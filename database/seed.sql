@@ -11,11 +11,15 @@ INSERT INTO interests (name) VALUES
 ('Thinking of going'),
 ('Interested');
 
+-- Faculties
+INSERT INTO faculties (name) VALUES
+('FMI');
+
 -- Halls
-INSERT INTO halls (faculty, hall_number, capacity) VALUES
-('FMI', 101, 100),
-('FMI', 200, 120),
-('FMI', 325, 200);
+INSERT INTO halls (faculty_id, hall_number, capacity) VALUES
+((SELECT id FROM faculties WHERE name='FMI'), 101, 100),
+((SELECT id FROM faculties WHERE name='FMI'), 200, 120),
+((SELECT id FROM faculties WHERE name='FMI'), 325, 200);
 
 -- User
 INSERT INTO users (
