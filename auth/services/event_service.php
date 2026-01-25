@@ -67,6 +67,48 @@ function return_events(int $user_id): void{
 
 }
 
+function loadEnv(string $path): void //REFACTOR LATER
+{
+    if (!file_exists($path)) {
+        return;
+    }
+
+    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if ($lines === false) return;
+
+    foreach ($lines as $line) {
+        $line = trim($line);
+
+        // skip comments
+        if ($line === '' || str_starts_with($line, '#')) {
+            continue;
+        }
+
+        // KEY=VALUE
+        $pos = strpos($line, '=');
+        if ($pos === false) continue;
+
+        $key = trim(substr($line, 0, $pos));
+        $value = trim(substr($line, $pos + 1));
+
+        // remove optional surrounding quotes
+        if (
+            (str_starts_with($value, '"') && str_ends_with($value, '"')) ||
+            (str_starts_with($value, "'") && str_ends_with($value, "'"))
+        ) {
+            $value = substr($value, 1, -1);
+        }
+
+        // don't overwrite existing real env vars
+        if (getenv($key) !== false) {
+            continue;
+        }
+
+        putenv("$key=$value");
+        $_ENV[$key] = $value;
+    }
+}
+
 /* SELECT events.id, events.event_datetime, events.title, events.event_description, users.fn, users.first_name, users.last_name, halls.hall_number, faculties.name FROM events INNER JOIN users on users.id = events.presenter_id INNER JOIN halls on halls.id = events.hall_id INNER JOIN faculties on faculties.id = halls.faculty_id */
 
 ?>

@@ -12,16 +12,15 @@ if(isset($_POST)){
 
 	$password_input = $login["password"];
 
+	loadEnv("../.env");
 
-	$servername = "localhost";
+	$servername = $_ENV["DB_HOST"];
 
-	$database = "schedule_db";
+	$database = $_ENV["DB_NAME"];
 
-	$username = "root";
+	$username = $_ENV["DB_USER"];
 
-	$password = "1111";
-
-	//MOVE THOSE^ 4 INTO .env
+	$password = $_ENV["DB_PASS"];
 
 	try {
 

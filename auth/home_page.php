@@ -1,14 +1,14 @@
 <?php
 
-$servername = "localhost";
+loadEnv("../.env");
 
-$database = "schedule_db";
+$servername = $_ENV["DB_HOST"];
 
-$username = "root";
+$database = $_ENV["DB_NAME"];
 
-$password = "";
+$username = $_ENV["DB_USER"];
 
-//MOVE THOSE^ 4 INTO .env
+$password = $_ENV["DB_PASS"];
 
 try {
 
