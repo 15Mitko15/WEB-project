@@ -19,17 +19,42 @@ $router->add($index_home_dir . "login", function() {
 
 	require "login.php";
 
-	//require "services/user_service.php";
-
-	//echo "we logged in";
-	//header("Location: " . $index_home_dir . "test_login.php");
 });
 
 $router->add($index_home_dir . "register", function() {
 
 	require "register.php";
 
-	//require "services/user_service.php";
+});
+
+$router->add($index_home_dir . "check_logged_in", function() {//CHANGE LATER
+
+	require "services/user_service.php";
+
+	session_start();
+
+	if(check_logged_in()){
+
+		echo "logged in";
+
+	}
+	else{
+
+		echo "NOT logged in";
+
+	}
+
+});
+
+$router->add($index_home_dir . "logout", function() {//MAYBE CHANGE LATER
+
+	session_start();
+
+	session_unset();
+
+	session_destroy();
+
+	//echo "loggged out";
 
 });
 

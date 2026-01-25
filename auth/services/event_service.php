@@ -17,11 +17,22 @@ function get_events_id_by_user_id(int $user_id): array{
 	return $events_id;
 }
 
-function return_events_for_user(int $user_id): void{
+function return_events(int $user_id): void{
 
 	$events_id_for_user = get_events_id_by_user_id($user_id);
 
-	$sql = "SELECT * FROM EVENTS";
+	$sql = "SELECT 	events.id, 					/*0*/
+					events.event_datetime, 		/*1*/
+					events.title, 				/*2*/
+					events.event_description, 	/*3*/
+					users.fn, users.first_name, /*4*/
+					users.last_name, 			/*5*/
+					halls.hall_number, 			/*6*/
+					faculties.name 				/*7*/
+			FROM events 
+			INNER JOIN users on users.id = events.presenter_id 
+			INNER JOIN halls on halls.id = events.hall_id 
+			INNER JOIN faculties on faculties.id = halls.faculty_id";
 
 	$query = $conn->query($sql) or die("failed!"); //CHANGE WITH THE MORE APROPRIATE METHODES OF APROACH
 
@@ -55,5 +66,7 @@ function return_events_for_user(int $user_id): void{
 	}
 
 }
+
+/* SELECT events.id, events.event_datetime, events.title, events.event_description, users.fn, users.first_name, users.last_name, halls.hall_number, faculties.name FROM events INNER JOIN users on users.id = events.presenter_id INNER JOIN halls on halls.id = events.hall_id INNER JOIN faculties on faculties.id = halls.faculty_id */
 
 ?>

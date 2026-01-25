@@ -1,7 +1,5 @@
 <?php
 
-//echo "this is register.php";
-
 require "services/user_service.php";
 
 if(isset($_POST)){
@@ -16,6 +14,7 @@ if(isset($_POST)){
 
 	$password_input = $register["password"];
 
+	$fn = $register["fn"];
 
 	$servername = "localhost";
 
@@ -28,10 +27,8 @@ if(isset($_POST)){
 	//MOVE THOSE^ 4 INTO .env
 
 	try {
-		
-		//$conn = new PDO("mysql:host=$servername", $username, $password);
 
-		$conn = new PDO("mysql:host=$servername;dbname=$database", $username, $password); //we are for some reason failing here
+		$conn = new PDO("mysql:host=$servername;dbname=$database", $username, $password);
 
 		$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION); // set the PDO error mode to exception
 
@@ -39,7 +36,19 @@ if(isset($_POST)){
 
 		if($current_user->get_id() == -1){
 
-			register($name, $email, $password_input, $conn);
+			$current_user = find_user_by_fn($fn, $conn);
+
+			if($current_user->get_id() == -1){
+
+				register($name, $email, $password_input, $fn, $conn);
+
+			}
+
+			else{
+
+				echo "User with such fn already exists!";
+
+			}
 
 		}
 

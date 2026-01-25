@@ -105,49 +105,89 @@ function find_user_by_email($email, $conn): User{
 
 	}
 
-	// while($row = $query->fetch()){
+}
 
-	// 	$is_empty = false;
+function find_user_by_fn($fn, $conn): User{
 
-	// 	if($row[1] == $email){
+	$sql = "SELECT * FROM USERS WHERE fn LIKE '$fn'";
 
-	// 		$id = $row[0];
+	// $query = $conn->prepare($sql);
 
-	// 		//$email = $email;
+	// $query->execute();
 
-	// 		$fn = $row[2];
+	$query = $conn->query($sql) or die("failed!"); //CHANGE WITH THE MORE APROPRIATE METHODES OF APROACH
 
-	// 		$first_name = $row[3];
+	//$passwordInput = $login["password"];
 
-	// 		$last_name = $row[4];
+	//$foundUser = false;
 
-	// 		$password_hash = $row[5];
+	//$is_empty = true;
 
-	// 		$role_id = $row[6];
+	if($query->rowCount() > 0){
 
-	// 		$current_user = new User($id, $email, $fn, $first_name, $last_name, $password_hash, $role_id);
+		$row = $query->fetch();
 
-	// 		return $current_user;
+		$id = $row[0];
 
-	// 	}
+		$email = $row[1];
 
-	// 	else {
+		//$fn = $row[2];
 
-	// 		$invalid_user = new User(-1, "no_email", "-1", "no_name", "no_name", "no_password", "-1");
+		$first_name = $row[3];
 
-	// 		return $invalid_user;
+		$last_name = $row[4];
 
-	// 	}
+		$password_hash = $row[5];
 
-	// }
+		$role_id = $row[6];
+
+		$current_user = new User($id, $email, $fn, $first_name, $last_name, $password_hash, $role_id);
+
+		return $current_user;
+
+	}
+
+	else{
+
+		$invalid_user = new User(-1, "no_email", "-1", "no_name", "no_name", "no_password", "-1");
+
+		return $invalid_user;
+
+	}
+
+}
+
+function check_logged_in(): bool{
+
+	if(isset($_SESSION['initiated'])){
+
+		//echo "You are already logged in!";
+
+		return true;
+
+	}
+
+	return false;
 
 }
 
 function login(User $current_user, string $password_input): void{//DO MORE TWEAKING LATER
 
+	session_start();
+
+	if(check_logged_in()){
+
+		echo "You are already logged in!";
+
+		return;
+
+	}
+
 	$password_input_hash = password_hash($password_input, PASSWORD_DEFAULT);
 
 	if(password_verify($password_input, $current_user->get_password_hash())){
+
+		$_SESSION['initiated'] = true;
 
 		echo json_encode([
 				"status" => "success",
@@ -163,23 +203,15 @@ function login(User $current_user, string $password_input): void{//DO MORE TWEAK
 
 		echo "Incorrect email or password!";
 
+		session_destroy();
+
 	}
 
 }
 
-function register(string $name, string $email, string $password_input, $conn): void{
-
-	$sql = "SELECT MAX(id) FROM USERS";
-
-	//$max_id = $conn->query($sql) or die("failed!"); //CHANGE WITH THE MORE APROPRIATE METHODES OF APROACH
-
-	//$new_id = $max_id + 1;
-
-	//$new_email = $email;
+function register(string $name, string $email, string $password_input, string $fn, $conn): void{
 
 	$name_arr = explode(" ", $name);
-
-	$new_fn = "12347"; //ONLY A PLACEHOLDER CHANGE LATER (currently has to be manualy changed for each new entry)
 
 	$new_first_name = $name_arr[0];
 
@@ -188,7 +220,7 @@ function register(string $name, string $email, string $password_input, $conn): v
 	$new_password_hash = password_hash($password_input, PASSWORD_DEFAULT);
 
 	$sql = "INSERT INTO USERS (id, email, fn, first_name, last_name, password_hash, role_id, created_at, updated_at)
-			VALUES (null, '$email', '$new_fn', '$new_first_name', '$new_last_name', '$new_password_hash', '1', current_timestamp(), current_timestamp())";
+			VALUES (null, '$email', '$fn', '$new_first_name', '$new_last_name', '$new_password_hash', '1', current_timestamp(), current_timestamp())";
 
 	$conn->query($sql) or die("failed!");
 

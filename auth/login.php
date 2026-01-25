@@ -1,7 +1,5 @@
 <?php
 
-//echo "this is login.php";
-
 require "services/user_service.php";
 
 if(isset($_POST)){
@@ -27,9 +25,7 @@ if(isset($_POST)){
 
 	try {
 
-		//$conn = new PDO("mysql:host=$servername", $username, $password);
-
-		$conn = new PDO("mysql:host=$servername;dbname=schedule_db", $username, $password); //we are for some reason failing here
+		$conn = new PDO("mysql:host=$servername;dbname=schedule_db", $username, $password);
 
 		$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION); // set the PDO error mode to exception
 
@@ -43,7 +39,7 @@ if(isset($_POST)){
 
 		else{
 
-			login($current_user, $password_input);//YOU FORGOT TO HASH IT (or hash it in the login() idc)
+			login($current_user, $password_input);
 
 		}
 
