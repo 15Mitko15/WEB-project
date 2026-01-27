@@ -1,72 +1,68 @@
 import { http } from "./http-service.js";
 import { userInfoService } from "./user-info-service.js";
 
-// Hardcoded endpoints - need to get from backend
-const API_BASE = "http://localhost:3000";
-
 const ENDPOINTS = {
-  register: `${API_BASE}/auth/register`,
-  login: `${API_BASE}/auth/login`,
-  logout: `${API_BASE}/auth/logout`,
-  me: `${API_BASE}/auth/me`,
+  register: `auth/register`,
+  login: `auth/login`,
+  logout: `auth/logout`,
+  me: `auth/me`,
 };
 
 export class AuthService {
-  logout() {
-    userInfoService.clear();
-  }
-
-  async register({ username, email, password }) {
-    const passwordToSend = password;
-
+  async register({ name, email, password, fn }) {
     await http.post(ENDPOINTS.register, {
-      body: {
-        username,
-        email,
-        password: passwordToSend,
-      },
+      body: { name, email, password, fn },
     });
 
-    // auto login after register
-    return this.login(email, password);
+    await this.login(email, password);
+
+    return this.me();
   }
 
   async login(email, password) {
-    const passwordToSend = password;
+    const { result } = await http.post(ENDPOINTS.login, {
+      body: { email, password },
+    });
 
-    // Commenting for now in order to be able to pseudo login
-    // const data = await http.post(ENDPOINTS.login, {
-    //   body: {
-    //     email,
-    //     password: passwordToSend,
-    //   },
-    // });
+    if (result?.user) {
+      userInfoService.save(result.user);
+      this.handler?.(result.user);
+      return result.user;
+    }
 
-    // if (!data?.token) {
-    //   throw new Error("Login failed: no token returned");
-    // }
+    return this.me();
+  }
 
-    // userInfoService.save(data.token);
+  async logout() {
+    try {
+      await http.post(ENDPOINTS.logout);
+    } finally {
+      userInfoService.clear();
+      this.handler?.(null);
+    }
+  }
 
-    // return userInfoService.getUserFromToken(data.token);
-    // Just return them as they are
-    userInfoService.save({ name: "MITAKA" });
-    return { name: "MITAKA" };
+  async me() {
+    const { result } = await http.get(ENDPOINTS.me);
+
+    const user = result?.user ?? result;
+
+    userInfoService.save(user);
+    this.handler?.(user);
+    return user;
   }
 
   async loadSession() {
-    if (!userInfoService.isTokenValid()) {
-      return null;
-    }
-
     try {
-      const user = await this.get(ENDPOINTS.me);
-      this.handler?.(user);
-      return user;
+      return await this.me();
     } catch {
-      this.logout();
+      this.handler?.(null);
       return null;
     }
+  }
+
+  onChange(handler) {
+    this.handler = handler;
   }
 }
 

@@ -1,21 +1,29 @@
 import { userInfoService } from "../services/user-info-service.js";
-import { getCurrentUser } from "../contexts/current-user-context.js";
+import { authService } from "../services/auth-service.js";
 
-export function PrivateOutlet(rootEl, renderChild) {
-  // check session lazily on navigation
-  // Remove token check
-  // const user = userInfoService.userInfoService.requireValidSession()v
-  const user = userInfoService.initialUser;
+let inFlightMe = null;
 
-  console.log("initial user", user);
-
-  if (!user) {
-    // clear stale data and redirect
-    userInfoService.clear();
-    window.location.hash = "#/login";
-    return;
+export async function PrivateOutlet(rootEl, renderChild) {
+  const cachedUser = userInfoService.currentUser;
+  if (cachedUser) {
+    renderChild();
   }
 
-  // user is authenticated → continue rendering
-  renderChild();
+  try {
+    if (!inFlightMe) {
+      inFlightMe = authService.me();
+    }
+    const user = await inFlightMe;
+    inFlightMe = null;
+
+    if (!user) throw new Error("No user");
+
+    if (!cachedUser) {
+      renderChild();
+    }
+  } catch {
+    inFlightMe = null;
+    userInfoService.clear();
+    window.location.hash = "#/login";
+  }
 }

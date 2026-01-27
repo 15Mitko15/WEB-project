@@ -111,6 +111,30 @@ final class AuthController
         ]);
     }
 
+    public function me(): void
+{
+    if (!check_logged_in()) {
+        throw new UnauthorizedException('Not logged in.');
+    }
+
+    $userId = (int)($_SESSION['user_id'] ?? 0);
+    if ($userId <= 0) {
+        throw new UnauthorizedException('Session is missing user.');
+    }
+
+    $user = find_user_by_id($this->conn, $userId);
+    if ($user === null) {
+        // Session refers to user that no longer exists
+        throw new UnauthorizedException('User not found.');
+    }
+
+    $this->json(200, [
+        'ok' => true,
+        'user' => $user->toPublicArray(),
+    ]);
+}
+
+
     // ---------- helpers ----------
 
     private function json(int $statusCode, array $payload): void
