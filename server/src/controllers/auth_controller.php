@@ -52,7 +52,7 @@ final class AuthController
         $password = (string)($data['password'] ?? '');
 
         if ($fullName === '' || $email === '' || $fn === '' || $password === '') {
-            throw new BadRequestException('Name, fn, email and password are required.');
+            throw new BadRequestException('Name, faculty number, email and password are required.');
         }
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {

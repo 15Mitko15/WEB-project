@@ -27,6 +27,11 @@ export function renderRegisterPage(rootEl) {
     type: "password",
   });
 
+  const { element: fnField, input: fnInput } = Input({
+    label: "Faculty number",
+    name: "facultyNumber",
+  });
+
   // Message area
   const error = document.createElement("div");
   error.className = "message message--error";
@@ -36,7 +41,7 @@ export function renderRegisterPage(rootEl) {
   // Form
   const form = document.createElement("form");
   form.className = "stack";
-  form.append(nameField, emailField, passField);
+  form.append(nameField, emailField, passField, fnField);
 
   const actions = document.createElement("div");
   actions.className = "row";
@@ -69,11 +74,15 @@ export function renderRegisterPage(rootEl) {
     const username = String(nameInput.value || "").trim();
     const email = String(emailInput.value || "").trim();
     const password = String(passInput.value || "");
+    const fn = String(fnInput.value || "");
+
+    console.log(username);
 
     const missingFields = [];
     if (!username) missingFields.push("name");
     if (!email) missingFields.push("email");
     if (!password) missingFields.push("password");
+    if (!fn) missingFields.push("faculty number");
 
     if (missingFields.length > 0) {
       showMessage(
@@ -89,7 +98,7 @@ export function renderRegisterPage(rootEl) {
     showMessage(error, "Registering...", { muted: true });
 
     try {
-      await authService.register({ username, email, password });
+      await authService.register({ name: username, email, password, fn });
       window.location.hash = "/";
     } catch (err) {
       showMessage(error, err?.message || "Registration failed");
