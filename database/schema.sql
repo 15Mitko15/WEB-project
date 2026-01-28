@@ -1,7 +1,7 @@
 CREATE DATABASE IF NOT EXISTS schedule_db;
 USE schedule_db;
 
-CREATE TABLE roles (
+CREATE TABLE IF NOT EXISTS roles (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -10,7 +10,7 @@ CREATE TABLE roles (
         ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     fn VARCHAR(10) NOT NULL UNIQUE,
@@ -27,12 +27,12 @@ CREATE TABLE users (
         FOREIGN KEY (role_id) REFERENCES roles(id)
 );
 
-CREATE TABLE faculties (
+CREATE TABLE IF NOT EXISTS faculties (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL UNIQUE
 );
 
-CREATE TABLE halls (
+CREATE TABLE IF NOT EXISTS halls (
     id INT AUTO_INCREMENT PRIMARY KEY,
     hall_number INT NOT NULL,
     faculty_id INT NOT NULL,
@@ -48,7 +48,7 @@ CREATE TABLE halls (
     UNIQUE (faculty_id, hall_number)
 );
 
-CREATE TABLE slots (
+CREATE TABLE IF NOT EXISTS slots (
     id INT AUTO_INCREMENT PRIMARY KEY,
     hall_id INT NOT NULL,
     slot_date DATE NOT NULL,
@@ -60,19 +60,15 @@ CREATE TABLE slots (
         DEFAULT CURRENT_TIMESTAMP 
         ON UPDATE CURRENT_TIMESTAMP,
     
-    CONSTRAINT fk_slot_event 
-        FOREIGN KEY (event_id) REFERENCES events(id)
-        ON DELETE CASCADE,
-    
     CONSTRAINT fk_slot_hall
         FOREIGN KEY (hall_id) REFERENCES halls(id),
 
-    CONSTRAIN chk_time_order
+    CONSTRAINT chk_time_order
         CHECK (end_time > start_time)
 
 );
 
-CREATE TABLE events (
+CREATE TABLE IF NOT EXISTS events (
     id INT AUTO_INCREMENT PRIMARY KEY,
     event_datetime DATETIME NOT NULL,
     hall_id INT NOT NULL,
@@ -91,7 +87,7 @@ CREATE TABLE events (
         FOREIGN KEY (presenter_id) REFERENCES users(id)
 );
 
-CREATE TABLE interests (
+CREATE TABLE IF NOT EXISTS interests (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -100,7 +96,7 @@ CREATE TABLE interests (
         ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE TABLE attendings (
+CREATE TABLE IF NOT EXISTS attendings (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     event_id INT NOT NULL,
