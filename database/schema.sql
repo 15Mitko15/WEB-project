@@ -48,6 +48,30 @@ CREATE TABLE halls (
     UNIQUE (faculty_id, hall_number)
 );
 
+CREATE TABLE slots (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    hall_id INT NOT NULL,
+    slot_date DATE NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    duration_minutes INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP 
+        DEFAULT CURRENT_TIMESTAMP 
+        ON UPDATE CURRENT_TIMESTAMP,
+    
+    CONSTRAINT fk_slot_event 
+        FOREIGN KEY (event_id) REFERENCES events(id)
+        ON DELETE CASCADE,
+    
+    CONSTRAINT fk_slot_hall
+        FOREIGN KEY (hall_id) REFERENCES halls(id),
+
+    CONSTRAIN chk_time_order
+        CHECK (end_time > start_time)
+
+);
+
 CREATE TABLE events (
     id INT AUTO_INCREMENT PRIMARY KEY,
     event_datetime DATETIME NOT NULL,
