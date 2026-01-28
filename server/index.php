@@ -6,6 +6,7 @@ $oneHour = 3600;
 require_once __DIR__ . '/src/global_error_handler.php';
 require_once __DIR__ . '/src/router.php';
 require_once __DIR__ . '/src/controllers/auth_controller.php';
+require_once __DIR__ . '/src/controllers/event_controller.php';
 
 register_global_error_handlers();
 
@@ -52,5 +53,6 @@ $router->post('/auth/register', [AuthController::class, 'register']);
 $router->post('/auth/logout', [AuthController::class, 'logout']);
 $router->get('/auth/me', [AuthController::class, 'me']); 
 $router->get('/auth/check_logged_in', [AuthController::class, 'checkLoggedIn']);
+$router->get('/home', [EventController::class, 'home']);
 
 $router->dispatch($method, $path);
