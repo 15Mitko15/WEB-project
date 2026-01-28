@@ -26,7 +26,17 @@ final class EventController
 
     public function event_preference(): void
     {
+        $data = $this->readInput();
 
+        $event_id = trim((string)($data['event_id'] ?? ''));
+        $new_interest_id = (string)($data['new_interest_id'] ?? '');
+
+        $action = edit_attending_preference($_SESSION['user_id'], (int)$event_id, (int)$new_interest_id, $this->conn);
+
+        $this->json(200, [
+            'ok' => true,
+            'action' => $action,
+        ]);
     }
 
 // ---------- helpers ----------

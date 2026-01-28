@@ -54,5 +54,6 @@ $router->post('/auth/logout', [AuthController::class, 'logout']);
 $router->get('/auth/me', [AuthController::class, 'me']); 
 $router->get('/auth/check_logged_in', [AuthController::class, 'checkLoggedIn']);
 $router->get('/home', [EventController::class, 'home']);
+$router->post('/event_preference', [EventController::class, 'event_preference']);
 
 $router->dispatch($method, $path);
