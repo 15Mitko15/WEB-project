@@ -1,0 +1,36 @@
+.table {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.table__el {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table__el th,
+.table__el td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.table__el th {
+  background: var(--surface-2);
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+.table__el tr:hover td {
+  background: rgba(96, 165, 250, 0.08);
+}
+
+.table__empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 16px;
+}

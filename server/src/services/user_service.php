@@ -77,4 +77,28 @@ function find_user_by_fn(PDO $conn, string $fn): ?User
     );;
 }
 
+function find_user_by_id(PDO $conn, int $id): ?User
+{
+    $sql = "SELECT id, email, fn, first_name, last_name, password_hash, role_id
+            FROM users
+            WHERE id = :id
+            LIMIT 1";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->execute(['id' => $id]);
+
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$row) return null;
+
+    return new User(
+        (int)$row['id'],
+        $row['email'],
+        $row['fn'],
+        $row['first_name'],
+        $row['last_name'],
+        $row['password_hash'],
+        (int)$row['role_id']
+    );;
+}
+
 ?>

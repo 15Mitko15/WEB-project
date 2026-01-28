@@ -1,0 +1,23 @@
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin: 16px 0;
+}
+
+.card__title {
+  margin: 0;
+  padding: 16px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--primary);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.card__body {
+  padding: 16px;
+  color: var(--text);
+}

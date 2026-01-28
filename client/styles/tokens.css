@@ -1,0 +1,35 @@
+:root {
+  /* Layout */
+  --bg: #f6f8fb;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --border: #d7dde6;
+  --shadow: 0 6px 14px rgba(16, 24, 40, 0.1);
+
+  /* Text */
+  --text: #1f2937;
+  --muted: #6b7280;
+
+  /* Brand colors */
+  --primary: #2563eb; /* main */
+  --secondary: #60a5fa; /* hover/secondary accents */
+  --tertiary: #10b981; /* alternative action */
+
+  /* Status */
+  --error: #dc2626;
+  --warning: #f59e0b;
+  --success: #16a34a;
+
+  /* Radii & spacing */
+  --radius: 10px;
+  --radius-sm: 8px;
+
+  --space-1: 6px;
+  --space-2: 10px;
+  --space-3: 14px;
+  --space-4: 18px;
+  --space-5: 24px;
+
+  --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
+    Arial;
+}

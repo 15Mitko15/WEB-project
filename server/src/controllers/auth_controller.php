@@ -52,7 +52,7 @@ final class AuthController
         $password = (string)($data['password'] ?? '');
 
         if ($fullName === '' || $email === '' || $fn === '' || $password === '') {
-            throw new BadRequestException('Name, fn, email and password are required.');
+            throw new BadRequestException('Name, faculty number, email and password are required.');
         }
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -110,6 +110,30 @@ final class AuthController
             'user_email' => $loggedIn ? ($_SESSION['user_email'] ?? null) : null,
         ]);
     }
+
+    public function me(): void
+{
+    if (!check_logged_in()) {
+        throw new UnauthorizedException('Not logged in.');
+    }
+
+    $userId = (int)($_SESSION['user_id'] ?? 0);
+    if ($userId <= 0) {
+        throw new UnauthorizedException('Session is missing user.');
+    }
+
+    $user = find_user_by_id($this->conn, $userId);
+    if ($user === null) {
+        // Session refers to user that no longer exists
+        throw new UnauthorizedException('User not found.');
+    }
+
+    $this->json(200, [
+        'ok' => true,
+        'user' => $user->toPublicArray(),
+    ]);
+}
+
 
     // ---------- helpers ----------
 

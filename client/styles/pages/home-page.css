@@ -1,0 +1,238 @@
+/* --- Home page --- */
+.home-header {
+  margin-bottom: 1rem;
+  margin-left: 5px;
+}
+
+.home-title {
+  margin: 0 0 0.25rem 0;
+}
+
+.home-subtitle {
+  margin: 0;
+  opacity: 0.8;
+}
+
+/* --- Events list --- */
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.event-row {
+  display: flex;
+  gap: 1rem;
+  padding: 0.9rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.event-date {
+  width: 90px;
+  flex-shrink: 0;
+  padding: 0.5rem;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.event-month {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.event-day {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-top: 0.2rem;
+}
+
+.event-time {
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+  opacity: 0.8;
+}
+
+.event-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.event-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.event-title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.event-author {
+  font-size: 0.9rem;
+  opacity: 0.75;
+  white-space: nowrap;
+}
+
+.event-desc {
+  margin: 0.5rem 0 0 0;
+  line-height: 1.35;
+  opacity: 0.9;
+
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+/* --- Status dropdown --- */
+.event-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.event-top-left {
+  min-width: 0;
+}
+
+.event-top-right {
+  flex-shrink: 0;
+}
+
+.status-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.status-label {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.status-select {
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: white;
+}
+
+/* Layout inside the content area: left text + right actions */
+.event-main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.event-text {
+  flex: 1;
+  min-width: 0; /* important so ellipsis/line-clamp works */
+}
+
+.event-actions {
+  flex-shrink: 0;
+}
+
+/* Title + author on one line (wraps nicely if needed) */
+.event-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: baseline;
+  justify-content: start;
+  gap: 0.75rem;
+}
+
+.home-header-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.filter {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.filter-label {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.filter-select {
+  margin-right: 15px;
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: white;
+}
+
+.empty-state {
+  margin: 0.5rem 0 0 0;
+  opacity: 0.8;
+}
+
+.pagination {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.page-btn,
+.page-number {
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: white;
+  cursor: pointer;
+}
+
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-numbers {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.page-number.active {
+  font-weight: 700;
+}
+
+.page-ellipsis {
+  padding: 0 0.25rem;
+  opacity: 0.7;
+  user-select: none;
+}
+
+@media (max-width: 520px) {
+  .event-main {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .event-actions {
+    align-self: flex-start;
+  }
+}
