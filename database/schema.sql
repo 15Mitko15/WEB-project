@@ -50,7 +50,6 @@ CREATE TABLE halls (
 
 CREATE TABLE slots (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    event_id INT NOT NULL UNIQUE,
     hall_id INT NOT NULL,
     slot_date DATE NOT NULL,
     start_time TIME NOT NULL,
