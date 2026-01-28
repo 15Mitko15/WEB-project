@@ -50,7 +50,7 @@ $router = new Router();
 $router->post('/auth/login', [AuthController::class, 'login']);
 $router->post('/auth/register', [AuthController::class, 'register']);
 $router->post('/auth/logout', [AuthController::class, 'logout']);
-$router->get('/auth/me', [AuthController::class, 'me']); // ✅ fixed
+$router->get('/auth/me', [AuthController::class, 'me']); 
 $router->get('/auth/check_logged_in', [AuthController::class, 'checkLoggedIn']);
 
 $router->dispatch($method, $path);
