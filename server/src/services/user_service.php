@@ -1,80 +1,150 @@
 <?php
 
-declare(strict_types=1);
+//echo "this is user_service.php";
 
-final class User {
-    public function __construct(
-        private int $id,
-        private string $email,
-        private string $fn,
-        private string $first_name,
-        private string $last_name,
-        private string $password_hash,
-        private int $role_id
-    ) {}
+class User{
 
-    public function get_id(): int { return $this->id; }
-    public function get_email(): string { return $this->email; }
-    public function get_password_hash(): string { return $this->password_hash; }
+	private $id;
 
-    public function toPublicArray(): array {
-        return [
-            'id' => $this->id,
-            'email' => $this->email,
-            'fn' => $this->fn,
-            'first_name' => $this->first_name,
-            'last_name' => $this->last_name,
-            'role_id' => $this->role_id,
-        ];
-    }
+	private $email;
+
+	private $fn;
+
+	private $first_name;
+
+	private $last_name;
+
+	private $password_hash;
+
+	private $role_id;
+
+	public function __construct(int $id, string $email, string $fn, string $first_name, string $last_name, string $password_hash, int $role_id){
+
+		$this->id = $id;
+
+		$this->email = $email;
+
+		$this->fn = $fn;
+
+		$this->first_name = $first_name;
+
+		$this->last_name = $last_name;
+
+		$this->password_hash = $password_hash;
+
+		$this->role_id = $role_id;
+	}
+
+	public function get_id(): int{
+
+		return $this->id;
+
+	}
+
+	public function get_email(): string{
+
+		return $this->email;
+
+	}
+
+	public function get_password_hash(): string{
+
+		return $this->password_hash;
+	
+	}
+
 }
 
-function find_user_by_email(PDO $conn, string $email): ?User {
-    $sql = "SELECT id, email, fn, first_name, last_name, password_hash, role_id
-            FROM users
-            WHERE email = :email
-            LIMIT 1";
+function find_user_by_email($email, $conn): User{
 
-    $stmt = $conn->prepare($sql);
-    $stmt->execute(['email' => $email]);
+	$sql = "SELECT * FROM USERS WHERE email LIKE '$email'";
 
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    if (!$row) return null;
+	$query = $conn->query($sql) or die("failed!"); //CHANGE WITH THE MORE APROPRIATE METHODES OF APROACH
 
-    return new User(
-        (int)$row['id'],
-        $row['email'],
-        $row['fn'],
-        $row['first_name'],
-        $row['last_name'],
-        $row['password_hash'],
-        (int)$row['role_id']
-    );
+	if($query->rowCount() > 0){
+
+		$row = $query->fetch();
+
+		$id = $row[0];
+
+		//$email = $email;
+
+		$fn = $row[2];
+
+		$first_name = $row[3];
+
+		$last_name = $row[4];
+
+		$password_hash = $row[5];
+
+		$role_id = $row[6];
+
+		$current_user = new User($id, $email, $fn, $first_name, $last_name, $password_hash, $role_id);
+
+		return $current_user;
+
+	}
+
+	else{
+
+		$invalid_user = new User(-1, "no_email", "-1", "no_name", "no_name", "no_password", "-1");
+
+		return $invalid_user;
+
+	}
+
 }
 
+function find_user_by_fn($fn, $conn): User{
 
-function find_user_by_fn(PDO $conn, string $fn): ?User
-{
-    $sql = "SELECT id, email, fn, first_name, last_name, password_hash, role_id
-            FROM users
-            WHERE fn = :fn
-            LIMIT 1";
+	$sql = "SELECT * FROM USERS WHERE fn LIKE '$fn'";
 
-    $stmt = $conn->prepare($sql);
-    $stmt->execute(['fn' => $fn]);
+	$query = $conn->query($sql) or die("failed!"); //CHANGE WITH THE MORE APROPRIATE METHODES OF APROACH
 
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    if (!$row) return null;
+	if($query->rowCount() > 0){
 
-    return new User(
-        (int)$row['id'],
-        $row['email'],
-        $row['fn'],
-        $row['first_name'],
-        $row['last_name'],
-        $row['password_hash'],
-        (int)$row['role_id']
-    );;
+		$row = $query->fetch();
+
+		$id = $row[0];
+
+		$email = $row[1];
+
+		//$fn = $row[2];
+
+		$first_name = $row[3];
+
+		$last_name = $row[4];
+
+		$password_hash = $row[5];
+
+		$role_id = $row[6];
+
+		$current_user = new User($id, $email, $fn, $first_name, $last_name, $password_hash, $role_id);
+
+		return $current_user;
+
+	}
+
+	else{
+
+		$invalid_user = new User(-1, "no_email", "-1", "no_name", "no_name", "no_password", "-1");
+
+		return $invalid_user;
+
+	}
+
+}
+
+function check_logged_in(): bool{
+
+	if(isset($_SESSION['initiated'])){
+
+		return true;
+
+	}
+
+	return false;
+
 }
 
 ?>
