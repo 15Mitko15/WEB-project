@@ -1,52 +1,32 @@
 <?php
-declare(strict_types=1);
 
-final class Router
-{
-    private array $routes = [
-        'GET' => [],
-        'POST' => [],
-    ];
+declare(strict_types = 1);
 
-    public function get(string $path, callable|array $handler): void
-    {
-        $this->routes['GET'][$this->normalize($path)] = $handler;
-    }
+class Router{
 
-    public function post(string $path, callable|array $handler): void
-    {
-        $this->routes['POST'][$this->normalize($path)] = $handler;
-    }
+	private array $routes = [];
 
-    public function dispatch(string $method, string $path): void
-    {
-        $method = strtoupper($method);
-        $path = $this->normalize($path);
+	public function add(string $path, Closure $handler): void {
 
-        $handler = $this->routes[$method][$path] ?? null;
+		$this->routes[$path] = $handler;
 
-        if ($handler === null) {
-            http_response_code(404);
-            echo "Not Found";
-            return;
-        }
+	}
 
-        // Support [ClassName::class, 'method']
-        if (is_array($handler)) {
-            [$class, $methodName] = $handler;
-            $instance = new $class();
-            $instance->$methodName();
-            return;
-        }
+	public function dispatch(string $path): void {
+		
+		if(array_key_exists($path, $this->routes)){
 
-        $handler();
-    }
+			$handler = $this->routes[$path];
 
-    private function normalize(string $path): string
-    {
-        // remove trailing slash except root
-        $path = rtrim($path, '/');
-        return $path === '' ? '/' : $path;
-    }
+			call_user_func($handler);
+
+		} else {
+
+			echo "Page not found: " . $path;
+
+		}
+	}
+
 }
+
 ?>

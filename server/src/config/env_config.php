@@ -1,7 +1,6 @@
 <?php
 
-function loadEnv(string $path): void
-{
+function loadEnv(string $path): void{//REFACTOR LATER!!!
     if (!file_exists($path)) {
         return;
     }
@@ -41,5 +40,9 @@ function loadEnv(string $path): void
         $_ENV[$key] = $value;
     }
 }
+
+loadEnv("../.env");
+
+//loadEnv(".env");//SHOULD BE ../.env CHANGE LATER!!!
 
 ?>
