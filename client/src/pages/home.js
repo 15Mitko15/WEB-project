@@ -39,7 +39,11 @@ function eventRowElement(event, interests) {
       <div class="event-main">
         <div class="event-text">
           <div class="event-heading">
-            <h2 class="event-title">${escapeHtml(event.title)}</h2>
+            <h2 class="event-title">
+              <a class="event-title-link" href="#/event/${event.id}">
+                ${escapeHtml(event.title)}
+              </a>
+            </h2>
             <span class="event-author">by ${escapeHtml(
               `${event.presenter_first_name} ${event.presenter_last_name}`.trim()
             )}</span>
@@ -77,13 +81,35 @@ function eventRowElement(event, interests) {
 export function renderHome(container) {
   // ---------- UI shell (render once) ----------
   container.innerHTML = `
-    <header class="home-header">
-      <div class="home-header-top">
-        <div>
-          <h1 class="home-title">Upcoming Events</h1>
-          <p class="home-subtitle">Browse events that are coming up soon.</p>
-        </div>
+  <header class="home-header">
+    <div class="home-header-top">
+      <div>
+        <h1 class="home-title">Upcoming Events</h1>
+        <p class="home-subtitle">Browse events that are coming up soon.</p>
+      </div>
 
+      <div class="controls">
+        <div class="export">
+          <button id="export-csv" class="btn btn--md" type="button">Export Excel (CSV)</button>
+          <button id="export-pdf" class="btn btn--md" type="button">Export PDF</button>
+        </div>
+        <div class="search">
+          <label class="filter-label" for="title-search">Search:</label>
+          <input
+            id="title-search"
+            class="search-input"
+            type="search"
+            placeholder="Search by title…"
+            autocomplete="off"
+          />
+        </div>
+        <div class="sort">
+          <label class="filter-label" for="date-sort">Sort:</label>
+          <select id="date-sort" class="filter-select">
+            <option value="asc" selected>Oldest → Newest</option>
+            <option value="desc">Newest → Oldest</option>
+          </select>
+        </div>
         <div class="filter">
           <label class="filter-label" for="status-filter">Filter:</label>
           <select id="status-filter" class="filter-select" disabled>
@@ -91,21 +117,26 @@ export function renderHome(container) {
           </select>
         </div>
       </div>
-    </header>
+    </div>
+  </header>
 
-    <section class="events-list" aria-label="List of upcoming events"></section>
+  <section class="events-list" aria-label="List of upcoming events"></section>
 
-    <nav class="pagination" aria-label="Pagination controls" style="display:none">
-      <button class="page-btn" data-page="prev">Prev</button>
-      <div class="page-numbers" aria-label="Page numbers"></div>
-      <button class="page-btn" data-page="next">Next</button>
-    </nav>
+  <nav class="pagination" aria-label="Pagination controls" style="display:none">
+    <button class="page-btn" data-page="prev">Prev</button>
+    <div class="page-numbers" aria-label="Page numbers"></div>
+    <button class="page-btn" data-page="next">Next</button>
+  </nav>
 
-    <p class="empty-state" id="homeMsg">Loading events…</p>
-  `;
+  <p class="empty-state" id="homeMsg">Loading events…</p>
+`;
 
   const list = container.querySelector(".events-list");
+  const exportCsvBtn = container.querySelector("#export-csv");
+  const exportPdfBtn = container.querySelector("#export-pdf");
+  const searchInput = container.querySelector("#title-search");
   const filterSelect = container.querySelector("#status-filter");
+  const sortSelect = container.querySelector("#date-sort");
   const pagination = container.querySelector(".pagination");
   const pageNumbers = container.querySelector(".page-numbers");
   const msg = container.querySelector("#homeMsg");
@@ -123,22 +154,210 @@ export function renderHome(container) {
     return found ? String(found.id) : "";
   }
 
+  function getVisibleEventsAllPages() {
+    const sorted = getSortedEvents();
+    const filtered = getFilteredEvents(sorted);
+    return filtered;
+  }
+
+  function csvEscape(value) {
+    const s = String(value ?? "");
+    // Wrap in quotes if needed; double-quote escaping per CSV spec
+    if (/[",\n]/.test(s)) return `"${s.replaceAll('"', '""')}"`;
+    return s;
+  }
+
+  function downloadBlob(filename, blob) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportEventsToCsv() {
+    const items = getVisibleEventsAllPages();
+
+    const rows = [
+      ["Title", "Date", "Time", "Presenter", "Faculty", "Hall", "Description"],
+      ...items.map((ev) => {
+        const d = new Date(ev.datetime || ev.date);
+        const date = Number.isFinite(d.getTime()) ? d.toLocaleDateString() : "";
+        const time = Number.isFinite(d.getTime())
+          ? d.toLocaleTimeString(undefined, {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : "";
+
+        const presenter = `${ev.presenter_first_name ?? ""} ${
+          ev.presenter_last_name ?? ""
+        }`.trim();
+
+        return [
+          ev.title ?? "",
+          date,
+          time,
+          presenter,
+          ev.faculty ?? "",
+          ev.hall ?? "",
+          ev.event_description ?? ev.description ?? "",
+        ];
+      }),
+    ];
+
+    const csv = rows.map((r) => r.map(csvEscape).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+
+    const stamp = new Date().toISOString().slice(0, 10);
+    downloadBlob(`events-${stamp}.csv`, blob);
+  }
+
+  function exportEventsToPdf() {
+    const items = getVisibleEventsAllPages();
+
+    const stamp = new Date().toLocaleString();
+    const title = "Upcoming Events";
+
+    const esc = (s) =>
+      String(s ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+    const rowsHtml = items
+      .map((ev) => {
+        const d = new Date(ev.datetime || ev.date);
+        const date = Number.isFinite(d.getTime()) ? d.toLocaleDateString() : "";
+        const time = Number.isFinite(d.getTime())
+          ? d.toLocaleTimeString(undefined, {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : "";
+        const presenter = `${ev.presenter_first_name ?? ""} ${
+          ev.presenter_last_name ?? ""
+        }`.trim();
+
+        return `
+          <tr>
+            <td><strong>${esc(ev.title)}</strong></td>
+            <td>${esc(date)}</td>
+            <td>${esc(time)}</td>
+            <td>${esc(presenter)}</td>
+            <td>${esc(ev.faculty ?? "")}</td>
+            <td>${esc(ev.hall ?? "")}</td>
+          </tr>
+        `;
+      })
+      .join("");
+
+    // IMPORTANT: don't use noopener/noreferrer here
+    const w = window.open("", "_blank");
+    if (!w) {
+      alert("Popup blocked. Please allow popups for PDF export.");
+      return;
+    }
+
+    w.document.open();
+    w.document.write(`
+      <!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Events export</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 22px; color: #111; }
+            h1 { margin: 0 0 6px 0; font-size: 20px; }
+            .meta { margin: 0 0 14px 0; font-size: 12px; color: #555; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th, td { border: 1px solid #ddd; padding: 8px; font-size: 12px; vertical-align: top; }
+            th { background: #f4f4f4; text-align: left; }
+            @media print {
+              body { padding: 0; }
+              .meta { margin-bottom: 10px; }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>${esc(title)}</h1>
+          <p class="meta">Generated: ${esc(stamp)} • Total: ${items.length}</p>
+  
+          <table>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Presenter</th>
+                <th>Faculty</th>
+                <th>Hall</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `);
+    w.document.close();
+
+    w.onload = () => {
+      w.focus();
+      w.print();
+    };
+  }
+
   function getSortedEvents() {
-    return [...events].sort(
-      (a, b) => new Date(a.datetime || a.date) - new Date(b.datetime || b.date)
-    );
+    const dir = sortSelect?.value || "asc";
+
+    return [...events].sort((a, b) => {
+      const da = new Date(a.datetime || a.date).getTime();
+      const db = new Date(b.datetime || b.date).getTime();
+
+      console.log(da, db);
+
+      // If any invalid dates slip in, push them to the end
+      if (!Number.isFinite(da) && !Number.isFinite(db)) return 0;
+      if (!Number.isFinite(da)) return 1;
+      if (!Number.isFinite(db)) return -1;
+
+      return dir === "desc" ? db - da : da - db;
+    });
+  }
+
+  function getSearchQuery() {
+    return String(searchInput?.value || "")
+      .trim()
+      .toLowerCase();
   }
 
   function getFilteredEvents(sorted) {
     const filter = filterSelect.value;
+    const q = getSearchQuery();
 
-    if (filter === "all") return sorted;
+    let res = sorted;
 
-    if (filter === "none") {
-      return sorted.filter((ev) => !getUserInterestId(ev));
+    if (filter !== "all") {
+      if (filter === "none") res = res.filter((ev) => !getUserInterestId(ev));
+      else res = res.filter((ev) => getUserInterestId(ev) === filter);
     }
 
-    return sorted.filter((ev) => getUserInterestId(ev) === filter);
+    if (q) {
+      res = res.filter((ev) =>
+        String(ev.title || "")
+          .toLowerCase()
+          .includes(q)
+      );
+    }
+
+    return res;
   }
 
   function getTotalPages(count) {
@@ -359,9 +578,31 @@ export function renderHome(container) {
     updateStatusAction.run({ eventId, interestId });
   }
 
+  function onSortChange() {
+    currentPage = 1;
+    renderList();
+  }
+
+  function onSearchInput() {
+    currentPage = 1;
+    renderList();
+  }
+
+  function onExportCsv() {
+    exportEventsToCsv();
+  }
+
+  function onExportPdf() {
+    exportEventsToPdf();
+  }
+
   pagination.addEventListener("click", onPaginationClick);
   filterSelect.addEventListener("change", onFilterChange);
   list.addEventListener("change", onListChange); // event delegation
+  sortSelect.addEventListener("change", onSortChange);
+  searchInput.addEventListener("input", onSearchInput);
+  exportCsvBtn.addEventListener("click", onExportCsv);
+  exportPdfBtn.addEventListener("click", onExportPdf);
 
   loadAction.run();
 
@@ -371,5 +612,9 @@ export function renderHome(container) {
     pagination.removeEventListener("click", onPaginationClick);
     filterSelect.removeEventListener("change", onFilterChange);
     list.removeEventListener("change", onListChange);
+    sortSelect.removeEventListener("change", onSortChange);
+    searchInput.removeEventListener("input", onSearchInput);
+    exportCsvBtn.removeEventListener("click", onExportCsv);
+    exportPdfBtn.removeEventListener("click", onExportPdf);
   };
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../services/event_service.php';
 require_once __DIR__ . '/../services/slots_service.php';
+require_once __DIR__ . '/../services/comment_service.php';
 require_once __DIR__ . '/controller-helpers.php';
 
 final class EventController
@@ -92,4 +93,80 @@ final class EventController
         }
 
     }
+    public function event(): void
+    {
+        if (!check_logged_in()) {
+            throw new UnauthorizedException('Not logged in.');
+        }
+
+        $eventId = (int)($_GET['id'] ?? 0);
+        if ($eventId <= 0) {
+            throw new BadRequestException('id query param is required.');
+        }
+
+        $userId = (int)($_SESSION['user_id'] ?? 0);
+
+        $event = return_event_by_id($this->conn, $eventId, $userId);
+
+        if ($event === null) {
+            throw new NotFoundException('Event not found.');
+        }
+
+        json(200, [
+            'ok' => true,
+            'event' => $event,
+        ]);
+    }
+    public function attendees(): void
+    {
+        if (!check_logged_in()) {
+            throw new UnauthorizedException('Not logged in.');
+        }
+
+        $eventId = (int)($_GET['event_id'] ?? 0);
+        if ($eventId <= 0) {
+            throw new BadRequestException('event_id query param is required.');
+        }
+
+        $groups = return_event_attendees_grouped($this->conn, $eventId);
+
+        json(200, [
+            'ok' => true,
+            'groups' => $groups,
+        ]);
+    }
+
+    public function comments(): void
+    {
+        if (!check_logged_in()) throw new UnauthorizedException('Not logged in.');
+
+        $eventId = (int)($_GET['event_id'] ?? 0);
+        if ($eventId <= 0) throw new BadRequestException('event_id is required.');
+
+        $items = return_event_comments($this->conn, $eventId);
+
+        json(200, ['ok' => true, 'comments' => $items]);
+    }
+
+    public function add_comment(): void
+    {
+        if (!check_logged_in()) throw new UnauthorizedException('Not logged in.');
+
+        $userId = (int)($_SESSION['user_id'] ?? 0);
+        if ($userId <= 0) throw new UnauthorizedException('Session is missing user.');
+
+        $data = readInput();
+
+        $eventId = (int)($data['event_id'] ?? 0);
+        $parentId = isset($data['parent_id']) ? (int)$data['parent_id'] : null;
+        $body = trim((string)($data['body'] ?? ''));
+
+        if ($eventId <= 0) throw new BadRequestException('event_id is required.');
+        if ($body === '') throw new BadRequestException('body is required.');
+
+        $created = create_comment($this->conn, $eventId, $userId, $body, $parentId);
+
+        json(201, ['ok' => true, 'comment' => $created]);
+    }
+
 }

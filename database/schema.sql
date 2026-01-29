@@ -117,3 +117,25 @@ CREATE TABLE IF NOT EXISTS attendings (
     
     UNIQUE (user_id, event_id)
 );
+
+CREATE TABLE IF NOT EXISTS comments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  event_id INT NOT NULL,
+  user_id INT NOT NULL,
+  parent_id INT NULL,
+  body TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_comments_event
+    FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+
+  CONSTRAINT fk_comments_user
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+
+  CONSTRAINT fk_comments_parent
+    FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE,
+
+  INDEX idx_comments_event_created (event_id, created_at),
+  INDEX idx_comments_parent (parent_id)
+);

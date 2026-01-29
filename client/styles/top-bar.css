@@ -118,3 +118,7 @@
   background: var(--border);
   margin: 6px 4px;
 }
+
+.app-main {
+  padding: 20px;
+}

@@ -46,7 +46,8 @@ function return_events(int $user_id, $conn): array
 							"presenter_last_name"=> $event_presenter_last_name,
 							"hall"=> $event_hall_number,
 							"faculty"=> $event_faculty,
-							"user_interest"=> $event_current_user_interest
+							"user_interest"=> $event_current_user_interest,
+							"description" => $event_description
 						);
 
 			$all_events[] = $event;
@@ -172,5 +173,98 @@ function register_event(
     ]);
 }
 
+function return_events_for_slot(PDO $conn, int $slotId, int $currentUserId = 0): array
+{
+    $sql = "
+        SELECT
+            e.id,
+            e.event_datetime AS datetime,
+            e.title,
+            e.event_description,
+            e.hall_id,
+            e.presenter_id
+        FROM slots s
+        JOIN events e
+          ON e.hall_id = s.hall_id
+         AND e.event_datetime >= CONCAT(s.slot_date, ' ', s.start_time)
+         AND e.event_datetime <  CONCAT(s.slot_date, ' ', s.end_time)
+        WHERE s.id = :slot_id
+        ORDER BY e.event_datetime ASC
+    ";
 
+    $stmt = $conn->prepare($sql);
+    $stmt->execute(['slot_id' => $slotId]);
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+}
+
+function return_event_by_id(PDO $conn, int $eventId, int $userId): ?array
+{
+    $sql = "
+        SELECT
+            e.id,
+            e.event_datetime AS datetime,
+            e.title,
+            e.event_description,
+            u.fn AS presenter_fn,
+            u.first_name AS presenter_first_name,
+            u.last_name AS presenter_last_name,
+            h.hall_number AS hall,
+            f.name AS faculty,
+            a.interest_id AS user_interest_id,
+            i.name AS user_interest
+        FROM events e
+        JOIN users u ON u.id = e.presenter_id
+        JOIN halls h ON h.id = e.hall_id
+        JOIN faculties f ON f.id = h.faculty_id
+        LEFT JOIN attendings a
+          ON a.event_id = e.id
+         AND a.user_id = :uid
+        LEFT JOIN interests i ON i.id = a.interest_id
+        WHERE e.id = :eid
+        LIMIT 1
+    ";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->execute([
+        'eid' => $eventId,
+        'uid' => $userId > 0 ? $userId : -1,
+    ]);
+
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $row ?: null;
+}
+
+function return_event_attendees_grouped(PDO $conn, int $eventId): array
+{
+    $sql = "
+        SELECT
+            i.name AS interest_name,
+            u.id,
+            u.first_name,
+            u.last_name,
+            u.fn
+        FROM attendings a
+        JOIN interests i ON i.id = a.interest_id
+        JOIN users u ON u.id = a.user_id
+        WHERE a.event_id = :eid
+        ORDER BY i.name ASC, u.first_name ASC, u.last_name ASC
+    ";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->execute(['eid' => $eventId]);
+
+    $groups = [];
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $key = $row['interest_name'];
+        if (!isset($groups[$key])) $groups[$key] = [];
+        $groups[$key][] = [
+            'id' => (int)$row['id'],
+            'first_name' => $row['first_name'],
+            'last_name' => $row['last_name'],
+            'fn' => $row['fn'],
+        ];
+    }
+    return $groups;
+}
 ?>

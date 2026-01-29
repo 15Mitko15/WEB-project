@@ -3,6 +3,10 @@ import { renderLoginPage } from "../pages/login.js";
 import { renderRegisterPage } from "./register.js";
 import { PrivateOutlet } from "../outlets/private-outlet.js";
 import { renderAppLayout } from "../layout/app-layout.js";
+import { renderCreateEventPage } from "../pages/create_event_page.js";
+import { renderEventPage } from "../pages/event-page.js";
+import { renderTeacherSlotPage } from "../pages/teacher-slot.js";
+import { TeacherOutlet } from "../outlets/teacher-outlet.js";
 
 function getPath() {
   const hash = window.location.hash || "#/";
@@ -38,18 +42,25 @@ export function createRouter(rootEl) {
     }
 
     // private group
+    // private group
     return PrivateOutlet(rootEl, () => {
-      // render layout once for all private pages
       const layout = renderAppLayout(rootEl);
 
-      // render the actual page inside layout.outlet
       let pageCleanup = null;
 
       if (path === "/") pageCleanup = renderHome(layout.outlet);
-      // if (path === "/create") pageCleanup = renderCreatePropertyPage(layout.outlet);
-      else if (path !== "/") setHash("/");
+      else if (path === "/create")
+        pageCleanup = renderCreateEventPage(layout.outlet);
+      else if (path.startsWith("/event/")) {
+        const id = path.split("/event/")[1];
+        return renderEventPage(layout.outlet, id);
+      } else if (path === "/teacher/slot") {
+        // Teacher-only page
+        return TeacherOutlet(layout.outlet, () =>
+          renderTeacherSlotPage(layout.outlet)
+        );
+      } else setHash("/");
 
-      // combined cleanup: page + layout
       cleanup = () => {
         if (typeof pageCleanup === "function") pageCleanup();
         layout.destroy?.();

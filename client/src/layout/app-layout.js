@@ -45,9 +45,9 @@ export function renderAppLayout(rootEl) {
         </div>
       </header>
 
-      <main id="outlet" class="container">
-        <div class="stack" id="slot"></div>
-      </main>
+        <main id="outlet" class="app-main">
+        <div id="slot"></div>
+        </main>
     </div>
   `;
 
@@ -108,8 +108,7 @@ export function renderAppLayout(rootEl) {
 
   function onAddEvent() {
     closeMenu();
-    // no-op for now
-    // later: window.location.hash = "#/events/new";
+    window.location.hash = "#/create";
   }
 
   function onViewEvents() {

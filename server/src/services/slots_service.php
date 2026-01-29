@@ -2,6 +2,109 @@
 
 require_once __DIR__ . '/event_service.php';
 
+/**
+ * Returns distinct slot dates.
+ * Default: excludes past slots (including today slots that already ended).
+ */
+function return_slot_dates(PDO $conn, bool $includePast = false): array
+{
+    $sql = "
+        SELECT DISTINCT slot_date
+        FROM slots
+    ";
+
+    if (!$includePast) {
+        $sql .= "
+        WHERE slot_date > CURDATE()
+           OR (slot_date = CURDATE() AND end_time > CURTIME())
+        ";
+    }
+
+    $sql .= " ORDER BY slot_date ASC";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->execute();
+
+    $dates = [];
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $dates[] = $row['slot_date'];
+    }
+
+    return $dates;
+}
+
+/**
+ * Returns halls (with faculty name) that have at least one slot for the given date.
+ * Default: excludes slots that already ended if date is today.
+ */
+function return_halls_with_slots_for_date(PDO $conn, string $date, bool $includePast = false): array
+{
+    $sql = "
+        SELECT DISTINCT
+            h.id AS hall_id,
+            h.hall_number,
+            f.name AS faculty_name
+        FROM slots s
+        JOIN halls h ON h.id = s.hall_id
+        JOIN faculties f ON f.id = h.faculty_id
+        WHERE s.slot_date = :d
+    ";
+
+    if (!$includePast) {
+        $sql .= "
+          AND (
+                s.slot_date > CURDATE()
+             OR (s.slot_date = CURDATE() AND s.end_time > CURTIME())
+          )
+        ";
+    }
+
+    $sql .= " ORDER BY f.name ASC, h.hall_number ASC";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->execute(['d' => $date]);
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+}
+
+function return_slots(PDO $conn, ?int $hallId = null, ?string $date = null, bool $includePast = false): array
+{
+    $sql = "
+        SELECT id, hall_id, slot_date, start_time, end_time, duration_minutes
+        FROM slots
+        WHERE 1=1
+    ";
+    $params = [];
+
+    if ($hallId !== null && $hallId > 0) {
+        $sql .= " AND hall_id = :hall_id";
+        $params['hall_id'] = $hallId;
+    }
+
+    if ($date !== null && $date !== '') {
+        $sql .= " AND slot_date = :slot_date";
+        $params['slot_date'] = $date;
+    }
+
+    if (!$includePast) {
+        // If date is specified, apply "today not ended yet" only for today.
+        // If date is not specified, exclude all past and already-ended-today.
+        $sql .= "
+          AND (
+                slot_date > CURDATE()
+             OR (slot_date = CURDATE() AND end_time > CURTIME())
+          )
+        ";
+    }
+
+    $sql .= " ORDER BY slot_date ASC, start_time ASC";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->execute($params);
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+}
+
 function get_available_slots($conn): array{
 
 	$sql = "SELECT slots.hall_id, slots.slot_date, slots.start_time, slots.end_time, slots.duration_minutes
