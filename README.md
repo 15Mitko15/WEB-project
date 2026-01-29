@@ -91,3 +91,49 @@ DB_PASS=your_mysql_password
 >The `.env` file contains sensitive information and **must not be commited to Github**.
 ### 2. Verify Configuration
 Once the `.env` file is configured, the application should be able to connect to the database automatically via `config/database.php`.
+
+
+## Running the project locally 
+To run the project locally, you need to start the frontend (client) and the backend (server) 
+in two separate terminals.
+
+### 1. Start the frontend (client)
+Open a terminal and navigate to the client directory:
+```bash 
+cd client
+```
+
+Then run:
+```bash 
+npx serve
+```
+
+This will start the client application and make it available in the browser (the terminal will 
+show the exact URL).
+
+### 2. Start the backend (server)
+Open a second terminal and navigate to the server directory (the directory containing index.php):
+```bash 
+cd server
+``` 
+
+Then start the PHP built-in server:
+```bash 
+php -S localhost:3001 index.php
+```
+
+This will start the backend API on:
+```arduino
+http://localhost:3001
+```
+
+### 3. Access the application
+- Front end runs on the URL provided by `npx serve`
+- Backend runs on `http://localhost:3001`
+- The frontend communicates with the backend via HTTP requests
+Make sure both servers are running at the same time.
+
+### Notes
+- PHP and MySQL must be installed and running locally
+- MySQL should contain the required database schema before starting the backend
+- If you encounter authentication issues, try clearing browser cookies or using incognito window
