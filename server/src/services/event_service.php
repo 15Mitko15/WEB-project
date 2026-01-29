@@ -1,114 +1,187 @@
 <?php
 
-// function get_events_id_by_user_id(int $user_id): array{
+function return_events(int $user_id, $conn): array
+{
+	$sql = "SELECT 	events.id, 						/*0*/
+					events.event_datetime, 			/*1*/
+					events.title, 					/*2*/
+					events.event_description, 		/*3*/
+					users.fn, 						/*4*/
+					users.first_name, 				/*5*/
+					users.last_name, 				/*6*/
+					halls.hall_number, 				/*7*/
+					faculties.name AS faculty_name, /*8*/
+					interests.name AS interest		/*9*/
+			FROM events 
+			INNER JOIN users on users.id = events.presenter_id 
+			INNER JOIN halls on halls.id = events.hall_id 
+			INNER JOIN faculties on faculties.id = halls.faculty_id 
+			LEFT JOIN attendings on events.id = attendings.event_id 
+				AND attendings.user_id = :user_id 
+			LEFT JOIN interests on attendings.interest_id = interests.id ";
 
-// 	$sql = "SELECT event_id FROM ATTENDINGS WHERE user_id = '$user_id'";//this might be wrong
+	//$query = $conn->query($sql) or die("failed!"); //CHANGE WITH THE MORE APROPRIATE METHODES OF APROACH
 
-// 	$ids = $conn->query($sql) or die("failed!"); //CHANGE WITH THE MORE APROPRIATE METHODES OF APROACH
+	$stmt = $conn->prepare($sql);
+    $stmt->execute(['user_id' => $user_id]);
 
-// 	$events_id = array();
+	if($stmt->rowCount() > 0){
 
-// 	while($row = $ids->fetch()){
+		$all_events = array();
 
-// 		$events_id[] = $row[0];
+		while($row = $stmt->fetch(PDO::FETCH_ASSOC)){
 
-// 	}
+			$event_id = $row['id'];
 
-// 	return $events_id;
-// }
+			$event_datetime = $row['event_datetime'];
 
-// function return_events(int $user_id): void{
+			$event_title = $row['title'];
 
-// 	$events_id_for_user = get_events_id_by_user_id($user_id);
+			$event_description = $row['event_description'];
 
-// 	$sql = "SELECT 	events.id, 					/*0*/
-// 					events.event_datetime, 		/*1*/
-// 					events.title, 				/*2*/
-// 					events.event_description, 	/*3*/
-// 					users.fn, users.first_name, /*4*/
-// 					users.last_name, 			/*5*/
-// 					halls.hall_number, 			/*6*/
-// 					faculties.name 				/*7*/
-// 			FROM events 
-// 			INNER JOIN users on users.id = events.presenter_id 
-// 			INNER JOIN halls on halls.id = events.hall_id 
-// 			INNER JOIN faculties on faculties.id = halls.faculty_id";
+			$event_presenter_fn = $row['fn'];
 
-// 	$query = $conn->query($sql) or die("failed!"); //CHANGE WITH THE MORE APROPRIATE METHODES OF APROACH
+			$event_presenter_first_name = $row['first_name'];
 
-// 	while($row = $query->fetch()){
+			$event_presenter_last_name = $row['last_name'];
 
-// 		$interest_id = -1;
+			$event_hall_number = $row['hall_number'];
 
-// 		if(in_array($row[0], $events_id_for_user)){
+			$event_faculty = $row['faculty_name'];
 
-// 			$interest_id = 0;//SAMPLE INTEREST ID WHERE ANYTHING GREATER THAN -1 IS INTEREST. CHANGE LATER!
+			$event_current_user_interest = $row['interest'];
 
-// 		}
+			$event = array(
+							"id"=> $event_id,
+							"datetime"=> $event_datetime,
+							"title"=> $event_title,
+							"presenter_fn"=> $event_presenter_fn,
+							"presenter_first_name"=> $event_presenter_first_name,
+							"presenter_last_name"=> $event_presenter_last_name,
+							"hall"=> $event_hall_number,
+							"faculty"=> $event_faculty,
+							"user_interest"=> $event_current_user_interest
+						);
 
-// 		$event_daytime = $row[1];
+			$all_events[] = $event;
 
-// 		$hall_id = $row[2];//CHANGE LATER!
+		}
 
-// 		$presenter_id = $row[3];//CHANGE LATER!(probably with an array)
+		return $all_events;
 
-// 		$title = $row[4];
+	}
 
-// 		$event = {	"interest": $interest_id,
-// 					"event_daytime": $event_daytime,
-// 					"hall": $hall_id,
-// 					"presenter": $presenter_id,
-// 					"title": $title
-// 					}
+	else{
 
-// 		echo json_encode($event);//This might not be correct and is subject to change. The frontend is supposed to receive a structure similar to $event.
+		$all_events = array();
 
-// 	}
+		return $all_events;
 
-// }
+	}
+}
 
-// function loadEnv(string $path): void //REFACTOR LATER
-// {
-//     if (!file_exists($path)) {
-//         return;
-//     }
+function return_events_time_in_timeframe_and_hall(string $datestamp_start, string $datestamp_end, int $hall_id, $conn): array{
 
-//     $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-//     if ($lines === false) return;
+	$sql = "SELECT event_datetime FROM events 
+			WHERE hall_id = $hall_id AND event_datetime BETWEEN '$datestamp_start' AND '$datestamp_end'";
 
-//     foreach ($lines as $line) {
-//         $line = trim($line);
+	$stmt = $conn->prepare($sql);
+    $stmt->execute();
 
-//         // skip comments
-//         if ($line === '' || str_starts_with($line, '#')) {
-//             continue;
-//         }
+    if($stmt->rowCount() > 0){
+    	$events_time = array();
 
-//         // KEY=VALUE
-//         $pos = strpos($line, '=');
-//         if ($pos === false) continue;
+    	while($row = $stmt->fetch(PDO::FETCH_ASSOC)){
+    		$events_time[] = $row['event_datetime'];
+    	}
 
-//         $key = trim(substr($line, 0, $pos));
-//         $value = trim(substr($line, $pos + 1));
+    	return $events_time;
+    }
+    else{
 
-//         // remove optional surrounding quotes
-//         if (
-//             (str_starts_with($value, '"') && str_ends_with($value, '"')) ||
-//             (str_starts_with($value, "'") && str_ends_with($value, "'"))
-//         ) {
-//             $value = substr($value, 1, -1);
-//         }
+    	$events_time = array();
+    	return $events;
 
-//         // don't overwrite existing real env vars
-//         if (getenv($key) !== false) {
-//             continue;
-//         }
+    }
 
-//         putenv("$key=$value");
-//         $_ENV[$key] = $value;
-//     }
-// }
+}
 
-/* SELECT events.id, events.event_datetime, events.title, events.event_description, users.fn, users.first_name, users.last_name, halls.hall_number, faculties.name FROM events INNER JOIN users on users.id = events.presenter_id INNER JOIN halls on halls.id = events.hall_id INNER JOIN faculties on faculties.id = halls.faculty_id */
+function edit_attending_preference(int $user_id, int $event_id, int $new_interest_id, $conn): string{
+
+	$sql = "SELECT interest_id FROM attendings WHERE user_id = $user_id AND event_id = $event_id";
+
+	$query = $conn->query($sql) or die("failed!"); //CHANGE WITH THE MORE APROPRIATE METHODES OF APROACH
+
+	if($query->rowCount() == 0 && $new_interest_id > 0){//presumes that anything greater than 0 is a given interest
+
+		$sql = "INSERT INTO attendings (id, user_id, event_id, interest_id, created_at, updated_at)
+				VALUES (null, '$user_id', '$event_id', '$new_interest_id', current_timestamp(), current_timestamp())";
+
+		$query = $conn->query($sql) or die("failed!"); //CHANGE WITH THE MORE APROPRIATE METHODES OF APROACH
+
+		return "created entry";
+
+	}
+
+	elseif ($query->rowCount() > 0){
+
+		if($new_interest_id <= 0){//it's supposed to be == 0 for no given interest but I do this to make it less prune to errors from wrong inputs
+
+			$sql = "DELETE FROM attendings 
+					WHERE user_id = $user_id AND event_id = $event_id";
+
+			$query = $conn->query($sql) or die("failed!"); //CHANGE WITH THE MORE APROPRIATE METHODES OF APROACH
+
+			return "deleted entry";
+
+		}
+
+		else{
+
+			$row = $query->fetch();
+
+			$current_interest_id = $row['interest_id'];
+
+			if($current_interest_id != $new_interest_id){
+
+				$sql = "UPDATE attendings 
+						SET interest_id = $new_interest_id
+						WHERE user_id = $user_id AND event_id = $event_id";
+
+				$query = $conn->query($sql) or die("failed!"); //CHANGE WITH THE MORE APROPRIATE METHODES OF APROACH
+
+				return "updated entry";
+
+			}
+
+		}
+
+	}
+
+	return "no edit";
+
+}
+
+function can_register_event(string $time_start, string $time_end, string $date ,$conn): bool{
+	$datetime_start = $date . ' ' . $time_start;
+	$datetime_end = $date . ' ' . $time_end;
+
+	$sql = "SELECT *
+			FROM events 
+			WHERE event_datetime BETWEEN '$datetime_start' AND '$datetime_end'";
+
+	$stmt = $conn->prepare($sql);
+    $stmt->execute();
+
+    return(!$stmt->rowCount() > 0);
+}
+
+function register_event(string $datetime, int $hall_id, int $user_id, string $title, string $description, $conn): void {
+	$sql = "INSERT INTO events (id, event_datetime, hall_id, presenter_id, title, event_description, created_at, updated_at)
+			VALUES (null, '$datetime', '$hall_id', '$user_id', '$title', '$description', current_timestamp(), current_timestamp())";
+
+	$stmt = $conn->prepare($sql);
+    $stmt->execute();
+}
 
 ?>
