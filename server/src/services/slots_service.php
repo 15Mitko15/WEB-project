@@ -33,6 +33,8 @@ function get_available_slots($conn): array{
 
     		$current_slots['date'] = $row['slot_date'];
 
+    		$hall_slots = array();
+
     		$unavailable_slot_pos = 0;
 
     		$events_time[] = $events_time[0];
@@ -56,7 +58,9 @@ function get_available_slots($conn): array{
 
     			}
     			else{
-    				$current_slots[] = $current_slot;
+    				//$slot_name = 'slot' . (string)$slots_count;
+
+    				$hall_slots[] = $current_slot;
 
     				$slots_count +=1;
     				
@@ -70,6 +74,7 @@ function get_available_slots($conn): array{
 
     			
     		}
+    		$current_slots['slots'] = $hall_slots;
     		$current_slots['slots_count'] = $slots_count;
     		$slots[] = $current_slots;
 
