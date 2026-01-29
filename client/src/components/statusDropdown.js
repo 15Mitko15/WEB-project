@@ -1,12 +1,8 @@
-// src/components/statusDropdown.js
-
-const OPTIONS = [
-  { value: "interested", label: "Interested" },
-  { value: "going", label: "Going" },
-  { value: "not_going", label: "Not going" },
-];
-
-export function createStatusDropdown({ id, initialValue = "" }) {
+export function createStatusDropdown({
+  id,
+  interests = [],
+  initialValue = "",
+}) {
   const wrapper = document.createElement("div");
   wrapper.className = "status-dropdown";
 
@@ -19,20 +15,20 @@ export function createStatusDropdown({ id, initialValue = "" }) {
   select.className = "status-select";
   select.id = `status-${id}`;
 
-  // placeholder option
+  // placeholder / "no status"
   const placeholder = document.createElement("option");
   placeholder.value = "";
-  placeholder.textContent = "Select…";
+  placeholder.textContent = "Select...";
   select.appendChild(placeholder);
 
-  for (const opt of OPTIONS) {
+  for (const item of interests) {
     const optionEl = document.createElement("option");
-    optionEl.value = opt.value;
-    optionEl.textContent = opt.label;
+    optionEl.value = String(item.id);
+    optionEl.textContent = item.name;
     select.appendChild(optionEl);
   }
 
-  select.value = initialValue;
+  select.value = String(initialValue || "");
 
   wrapper.appendChild(label);
   wrapper.appendChild(select);

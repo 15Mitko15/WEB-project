@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../services/event_service.php';
 require_once __DIR__ . '/../services/slots_service.php';
+require_once __DIR__ . '/controller-helpers.php';
 
 final class EventController
 {
@@ -14,11 +15,11 @@ final class EventController
         $this->conn = db();
     }
 
-    public function home(): void
+    public function events(): void
     {
     	$events = return_events($_SESSION['user_id'], $this->conn);
 
-    	$this->json(200, [
+    	json(200, [
             'ok' => true,
             'events' => $events,
         ]);
@@ -26,14 +27,14 @@ final class EventController
 
     public function event_preference(): void
     {
-        $data = $this->readInput();
+        $data = readInput();
 
         $event_id = trim((string)($data['event_id'] ?? ''));
         $new_interest_id = (string)($data['new_interest_id'] ?? '');
 
         $action = edit_attending_preference($_SESSION['user_id'], (int)$event_id, (int)$new_interest_id, $this->conn);
 
-        $this->json(200, [
+        json(200, [
             'ok' => true,
             'message' => $action,
         ]);
@@ -41,7 +42,7 @@ final class EventController
 
     public function register_event(): void{
 
-        $data = $this->readInput();
+        $data = readInput();
 
         $date = trim((string)($data['date'] ?? ''));
         $time = (string)($data['time'] ?? '');
@@ -80,42 +81,15 @@ final class EventController
 
             register_event($datetime, $hall_id, $_SESSION['user_id'], $title, $description, $this->conn);
 
-            $this->json(200, [
+            json(200, [
                 'ok' => true,
                 'message' => 'successfully registered event',
             ]);
 
         }
         else{
-            $this->json(200, [
-                'ok' => false,
-                'message' => 'can not register',
-            ]);
+            throw new BadRequestException('You can not create such event');
         }
 
-    }
-
-// ---------- helpers ----------
-
-    private function json(int $statusCode, array $payload): void
-    {
-        http_response_code($statusCode);
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode($payload);
-    }
-
-    private function readInput(): array
-    {
-        $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
-
-        if (stripos($contentType, 'application/json') !== false) {
-            $raw = file_get_contents('php://input');
-            $decoded = json_decode($raw ?: '', true);
-            return is_array($decoded) ? $decoded : [];
-        }
-
-        if (!empty($_POST)) return $_POST;
-
-        return $_GET ?? [];
     }
 }

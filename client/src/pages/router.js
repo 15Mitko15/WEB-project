@@ -1,8 +1,8 @@
 import { renderHome } from "../pages/home.js";
 import { renderLoginPage } from "../pages/login.js";
 import { renderRegisterPage } from "./register.js";
-
 import { PrivateOutlet } from "../outlets/private-outlet.js";
+import { renderAppLayout } from "../layout/app-layout.js";
 
 function getPath() {
   const hash = window.location.hash || "#/";
@@ -14,23 +14,46 @@ function setHash(path) {
 }
 
 export function createRouter(rootEl) {
+  let cleanup = null;
+
+  function runCleanup() {
+    if (typeof cleanup === "function") cleanup();
+    cleanup = null;
+  }
+
   function render() {
+    runCleanup();
+
     const path = getPath();
 
-    // public routes
-    if (path === "/login") return renderLoginPage(rootEl);
-    if (path === "/register") {
-      return renderRegisterPage(rootEl);
+    // public routes (no topbar)
+    if (path === "/login") {
+      cleanup = renderLoginPage(rootEl) || null;
+      return;
     }
 
-    // private group (equivalent to <Route element={<PrivateOutlet/>}>)
+    if (path === "/register") {
+      cleanup = renderRegisterPage(rootEl) || null;
+      return;
+    }
+
+    // private group
     return PrivateOutlet(rootEl, () => {
-      // nested providers (equivalent to CitiesProvider -> NeighborhoodsProvider -> PropertiesProvider -> <Outlet/>)
+      // render layout once for all private pages
+      const layout = renderAppLayout(rootEl);
 
-      if (path === "/") return renderHome(rootEl);
-      // if (path === "/create") return renderCreatePropertyPage(rootEl);
+      // render the actual page inside layout.outlet
+      let pageCleanup = null;
 
-      setHash("/");
+      if (path === "/") pageCleanup = renderHome(layout.outlet);
+      // if (path === "/create") pageCleanup = renderCreatePropertyPage(layout.outlet);
+      else if (path !== "/") setHash("/");
+
+      // combined cleanup: page + layout
+      cleanup = () => {
+        if (typeof pageCleanup === "function") pageCleanup();
+        layout.destroy?.();
+      };
     });
   }
 
@@ -38,7 +61,6 @@ export function createRouter(rootEl) {
     window.addEventListener("hashchange", render);
     window.addEventListener("load", render);
 
-    // ensure we have a route
     if (!window.location.hash) setHash("/");
     render();
   }

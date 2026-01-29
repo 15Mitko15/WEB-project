@@ -20,37 +20,23 @@ function return_events(int $user_id, $conn): array
 				AND attendings.user_id = :user_id 
 			LEFT JOIN interests on attendings.interest_id = interests.id ";
 
-	//$query = $conn->query($sql) or die("failed!"); //CHANGE WITH THE MORE APROPRIATE METHODES OF APROACH
-
 	$stmt = $conn->prepare($sql);
     $stmt->execute(['user_id' => $user_id]);
 
+	$all_events = array();
+
 	if($stmt->rowCount() > 0){
-
-		$all_events = array();
-
 		while($row = $stmt->fetch(PDO::FETCH_ASSOC)){
-
 			$event_id = $row['id'];
-
 			$event_datetime = $row['event_datetime'];
-
 			$event_title = $row['title'];
-
 			$event_description = $row['event_description'];
-
 			$event_presenter_fn = $row['fn'];
-
 			$event_presenter_first_name = $row['first_name'];
-
 			$event_presenter_last_name = $row['last_name'];
-
 			$event_hall_number = $row['hall_number'];
-
 			$event_faculty = $row['faculty_name'];
-
 			$event_current_user_interest = $row['interest'];
-
 			$event = array(
 							"id"=> $event_id,
 							"datetime"=> $event_datetime,
@@ -64,46 +50,35 @@ function return_events(int $user_id, $conn): array
 						);
 
 			$all_events[] = $event;
-
 		}
-
-		return $all_events;
-
 	}
 
-	else{
+	return $all_events;
 
-		$all_events = array();
-
-		return $all_events;
-
-	}
 }
+function return_events_time_in_timeframe_and_hall(
+    string $datestamp_start,
+    string $datestamp_end,
+    int $hall_id,
+    PDO $conn
+): array {
+    $sql = "SELECT event_datetime
+            FROM events
+            WHERE hall_id = :hall_id
+              AND event_datetime BETWEEN :start AND :end";
 
-function return_events_time_in_timeframe_and_hall(string $datestamp_start, string $datestamp_end, int $hall_id, $conn): array{
+    $stmt = $conn->prepare($sql);
+    $stmt->execute([
+        'hall_id' => $hall_id,
+        'start' => $datestamp_start,
+        'end' => $datestamp_end,
+    ]);
 
-	$sql = "SELECT event_datetime FROM events 
-			WHERE hall_id = $hall_id AND event_datetime BETWEEN '$datestamp_start' AND '$datestamp_end'";
-
-	$stmt = $conn->prepare($sql);
-    $stmt->execute();
-
-    if($stmt->rowCount() > 0){
-    	$events_time = array();
-
-    	while($row = $stmt->fetch(PDO::FETCH_ASSOC)){
-    		$events_time[] = $row['event_datetime'];
-    	}
-
-    	return $events_time;
+    $times = [];
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $times[] = $row['event_datetime'];
     }
-    else{
-
-    	$events_time = array();
-    	return $events;
-
-    }
-
+    return $times;
 }
 
 function edit_attending_preference(int $user_id, int $event_id, int $new_interest_id, $conn): string{
@@ -176,12 +151,26 @@ function can_register_event(string $time_start, string $time_end, string $date ,
     return(!$stmt->rowCount() > 0);
 }
 
-function register_event(string $datetime, int $hall_id, int $user_id, string $title, string $description, $conn): void {
-	$sql = "INSERT INTO events (id, event_datetime, hall_id, presenter_id, title, event_description, created_at, updated_at)
-			VALUES (null, '$datetime', '$hall_id', '$user_id', '$title', '$description', current_timestamp(), current_timestamp())";
+function register_event(
+    string $datetime,
+    int $hall_id,
+    int $user_id,
+    string $title,
+    string $description,
+    PDO $conn
+): void {
+    $sql = "INSERT INTO events (event_datetime, hall_id, presenter_id, title, event_description, created_at, updated_at)
+            VALUES (:dt, :hall, :presenter, :title, :desc, NOW(), NOW())";
 
-	$stmt = $conn->prepare($sql);
-    $stmt->execute();
+    $stmt = $conn->prepare($sql);
+    $stmt->execute([
+        'dt' => $datetime,
+        'hall' => $hall_id,
+        'presenter' => $user_id,
+        'title' => $title,
+        'desc' => $description,
+    ]);
 }
+
 
 ?>
