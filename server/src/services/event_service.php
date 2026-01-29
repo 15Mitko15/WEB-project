@@ -80,6 +80,32 @@ function return_events(int $user_id, $conn): array
 	}
 }
 
+function return_events_time_in_timeframe_and_hall(string $datestamp_start, string $datestamp_end, int $hall_id, $conn): array{
+
+	$sql = "SELECT event_datetime FROM events 
+			WHERE hall_id = $hall_id AND event_datetime BETWEEN '$datestamp_start' AND '$datestamp_end'";
+
+	$stmt = $conn->prepare($sql);
+    $stmt->execute();
+
+    if($stmt->rowCount() > 0){
+    	$events_time = array();
+
+    	while($row = $stmt->fetch(PDO::FETCH_ASSOC)){
+    		$events_time[] = $row['event_datetime'];
+    	}
+
+    	return $events_time;
+    }
+    else{
+
+    	$events_time = array();
+    	return $events;
+
+    }
+
+}
+
 function edit_attending_preference(int $user_id, int $event_id, int $new_interest_id, $conn): string{
 
 	$sql = "SELECT interest_id FROM attendings WHERE user_id = $user_id AND event_id = $event_id";
@@ -134,6 +160,28 @@ function edit_attending_preference(int $user_id, int $event_id, int $new_interes
 
 	return "no edit";
 
+}
+
+function can_register_event(string $time_start, string $time_end, string $date ,$conn): bool{
+	$datetime_start = $date . ' ' . $time_start;
+	$datetime_end = $date . ' ' . $time_end;
+
+	$sql = "SELECT *
+			FROM events 
+			WHERE event_datetime BETWEEN '$datetime_start' AND '$datetime_end'";
+
+	$stmt = $conn->prepare($sql);
+    $stmt->execute();
+
+    return(!$stmt->rowCount() > 0);
+}
+
+function register_event(string $datetime, int $hall_id, int $user_id, string $title, string $description, $conn): void {
+	$sql = "INSERT INTO events (id, event_datetime, hall_id, presenter_id, title, event_description, created_at, updated_at)
+			VALUES (null, '$datetime', '$hall_id', '$user_id', '$title', '$description', current_timestamp(), current_timestamp())";
+
+	$stmt = $conn->prepare($sql);
+    $stmt->execute();
 }
 
 ?>
