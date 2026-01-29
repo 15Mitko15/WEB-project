@@ -1,5 +1,20 @@
 # WEB-project
 
+## This is a draft version
+### What we have so far:
+- login
+- registration
+- visualization of presentations 
+- partial functionality for adding presentations as a student
+- partial functionality for adding slots as a teacher
+### What we're going to do:
+- clicking on a certain presentation
+- adding/redacting/deleting a presentation
+- marking an interest for a presentation
+- adding slots for presentations as a teacher
+- export of presentations schedule
+- logout from the UI
+
 ## Database Setup
 This project uses **MySQL** as its database.
 Follow the steps below to create and populate the database locally.
