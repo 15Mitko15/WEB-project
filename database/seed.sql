@@ -214,7 +214,8 @@ INSERT INTO users (
     2
 );
 
---Slots
+
+-- Slots
 INSERT INTO slots (
     hall_id, 
     slot_date, 
@@ -225,7 +226,7 @@ INSERT INTO slots (
     updated_at
 ) VALUES (
     1, 
-    '2026-01-29', 
+    '2026-03-29', 
     '10:30:00', 
     '12:30:00', 
     5, 
@@ -243,7 +244,7 @@ INSERT INTO slots (
     updated_at
 ) VALUES (
     1, 
-    '2026-01-29', 
+    '2026-03-29', 
     '13:30:00', 
     '15:30:00', 
     5, 
@@ -261,7 +262,7 @@ INSERT INTO slots (
     updated_at
 ) VALUES (
     2, 
-    '2026-01-29', 
+    '2026-03-29', 
     '11:30:00', 
     '13:30:00', 
     10, 
@@ -279,7 +280,7 @@ INSERT INTO slots (
     updated_at
 ) VALUES (
     2, 
-    '2026-01-29', 
+    '2026-03-29', 
     '14:30:00', 
     '16:30:00', 
     10, 
@@ -297,7 +298,7 @@ INSERT INTO slots (
     updated_at
 ) VALUES (
     3, 
-    '2026-01-29', 
+    '2026-03-29', 
     '9:30:00', 
     '13:30:00', 
     15, 
@@ -315,14 +316,11 @@ INSERT INTO events (
     created_at, 
     updated_at
 ) VALUES (
-    '2026-01-29 10:00:00', --so it is third in the only slot in hall_id=3
+    '2026-01-29 10:00:00',
     3,
     2, 
     'What is frontend',
-    'I will be talking about what frontend is in the grand scheme of things! 
-    I will also mention what we do with it, what do we write it with and what 
-    it takes to become a good frontend developer! All of my friends are welcome 
-    to come and watch!!!!',
+    'I will be talking about what frontend is in the grand scheme of things! I will also mention what we do with it, what do we write it with and what it takes to become a good frontend developer! All of my friends are welcome to come and watch!!!!',
     CURRENT_TIMESTAMP(), 
     CURRENT_TIMESTAMP()
 );
@@ -340,10 +338,7 @@ INSERT INTO events (
     3,
     3, 
     'Testing with Selenium WebDriver',
-    'Hey guys! I hope you can come watch me be passionate about testing!! 
-    I will show you what testing is, how to do it with selenium webdriver! 
-    It works like magic, I swear it is very cool as long as you give it a 
-    chance!!!!!!!!!',
+    'Hey guys! I hope you can come watch me be passionate about testing!! I will show you what testing is, how to do it with selenium webdriver! It works like magic, I swear it is very cool as long as you give it a chance!!!!!!!!!',
     CURRENT_TIMESTAMP(), 
     CURRENT_TIMESTAMP()
 );
@@ -361,10 +356,7 @@ INSERT INTO events (
     3,
     4, 
     'What is backend',
-    'Wassup peeps.. I will be presenting about backend - what is a server, 
-    what kind of code does the backend handle, what technologies are used 
-    for backend and reasons to become a backend dev other than the fact 
-    you get the most money :D!',
+    'Wassup peeps.. I will be presenting about backend - what is a server, what kind of code does the backend handle, what technologies are used for backend and reasons to become a backend dev other than the fact you get the most money :D!',
     CURRENT_TIMESTAMP(), 
     CURRENT_TIMESTAMP()
 );
@@ -382,8 +374,7 @@ INSERT INTO events (
     2,
     5, 
     'CSS and how to use it smartly',
-    'Since CSS is the most scary thing in the world, I am here to teach 
-    you how to use it in such a way the planet doesnt explode :)',
+    'Since CSS is the most scary thing in the world, I am here to teach you how to use it in such a way the planet doesnt explode :)',
     CURRENT_TIMESTAMP(), 
     CURRENT_TIMESTAMP()
 );
@@ -401,10 +392,7 @@ INSERT INTO events (
     2,
     6, 
     'JavaScript and how everyone who knows it is a wizard',
-    'Hey guys, come to my presentation about JS! I am gandalf 
-    and I will show you my wizardry skills in regards to JS. 
-    Once i show you i will turn into Gandalf the White and 
-    move on to bigger and better things.',
+    'Hey guys, come to my presentation about JS! I am gandalf and I will show you my wizardry skills in regards to JS. Once i show you i will turn into Gandalf the White and move on to bigger and better things.',
     CURRENT_TIMESTAMP(), 
     CURRENT_TIMESTAMP()
 );
@@ -422,9 +410,7 @@ INSERT INTO events (
     2,
     7, 
     'This is a presentation name',
-    'I am tired and my imagination is starting 
-    to run dry for those event descriptions, idk 
-    if you get me..',
+    'I am tired and my imagination is starting to run dry for those event descriptions, idk if you get me..',
     CURRENT_TIMESTAMP(), 
     CURRENT_TIMESTAMP()
 );
@@ -442,11 +428,7 @@ INSERT INTO events (
     1,
     7, 
     'Introduction to SQL Databases',
-    'An introductory session covering the basics of 
-    relational databases, SQL syntax, and how to work 
-    with data using queries, joins, and constraints. 
-    Suitable for beginners with little or no prior 
-    database experience.',
+    'An introductory session covering the basics of relational databases, SQL syntax, and how to work with data using queries, joins, and constraints. Suitable for beginners with little or no prior database experience.',
     CURRENT_TIMESTAMP(), 
     CURRENT_TIMESTAMP()
 );
@@ -464,10 +446,7 @@ INSERT INTO events (
     1,
     8, 
     'Designing Scalable Event Scheduling Systems',
-    'A practical talk on designing and implementing event 
-    scheduling systems. We will discuss database schema 
-    design, time slots, relations between entities, and 
-    common pitfalls when handling dates and availability.',
+    'A practical talk on designing and implementing event scheduling systems. We will discuss database schema design, time slots, relations between entities, and common pitfalls when handling dates and availability.',
     CURRENT_TIMESTAMP(), 
     CURRENT_TIMESTAMP()
 );
@@ -485,10 +464,7 @@ INSERT INTO events (
     1,
     9, 
     'Understanding Web Authentication and Sessions',
-    'An overview of how authentication works in web applications. 
-    The session covers login flows, server-side sessions, cookies, 
-    and common security considerations when handling user 
-    authentication.',
+    'An overview of how authentication works in web applications. The session covers login flows, server-side sessions, cookies, and common security considerations when handling user authentication.',
     CURRENT_TIMESTAMP(), 
     CURRENT_TIMESTAMP()
 );
@@ -506,11 +482,7 @@ INSERT INTO events (
     1,
     10, 
     'Database Relationships and Data Integrity',
-    'This session explores relationships between 
-    database tables, including one-to-one, one-to-many, 
-    and many-to-many relations. We will also discuss 
-    foreign keys, constraints, and strategies for 
-    maintaining data integrity.',
+    'This session explores relationships between database tables, including one-to-one, one-to-many, and many-to-many relations. We will also discuss foreign keys, constraints, and strategies for maintaining data integrity.',
     CURRENT_TIMESTAMP(), 
     CURRENT_TIMESTAMP()
 );
@@ -528,10 +500,7 @@ INSERT INTO events (
     1,
     11, 
     'From Idea to Implementation: Full-Stack Project Workflow',
-    'A walkthrough of the complete workflow of building a 
-    full-stack application — from initial planning and 
-    database design to backend development, frontend 
-    integration, and deployment considerations.',
+    'A walkthrough of the complete workflow of building a full-stack application — from initial planning and database design to backend development, frontend integration, and deployment considerations.',
     CURRENT_TIMESTAMP(), 
     CURRENT_TIMESTAMP()
 );
