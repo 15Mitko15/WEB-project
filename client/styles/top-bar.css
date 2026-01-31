@@ -122,3 +122,19 @@
 .app-main {
   padding: 20px;
 }
+
+.topbar__right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.topbar__welcome {
+  font-size: 0.95rem;
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+.topbar__welcome strong {
+  opacity: 1;
+}

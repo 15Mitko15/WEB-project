@@ -8,32 +8,6 @@
   width: min(1600px, 100%);
   margin: 70px auto 0; /* keeps your existing 70px top spacing */
   padding: 26px 22px 46px;
-  position: relative;
-  min-height: 100vh;
-}
-
-/* Background */
-.container.container--wide::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background: radial-gradient(
-      900px 500px at 18% 10%,
-      rgba(99, 102, 241, 0.18),
-      transparent 60%
-    ),
-    radial-gradient(
-      700px 450px at 82% 18%,
-      rgba(16, 185, 129, 0.14),
-      transparent 60%
-    ),
-    radial-gradient(
-      800px 520px at 50% 95%,
-      rgba(244, 63, 94, 0.1),
-      transparent 55%
-    ),
-    linear-gradient(180deg, rgba(10, 12, 18, 0.02), rgba(10, 12, 18, 0));
 }
 
 /* Page spacing */

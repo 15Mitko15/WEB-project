@@ -1,0 +1,28 @@
+/* Teacher Slot Add page layout helpers */
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field__label {
+  font-size: 0.92rem;
+  opacity: 0.85;
+}
+
+.field__hint {
+  font-size: 0.85rem;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+@media (max-width: 900px) {
+  .slot-grid {
+    grid-template-columns: 1fr;
+  }
+}

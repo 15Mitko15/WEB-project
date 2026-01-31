@@ -5,8 +5,11 @@ import { PrivateOutlet } from "../outlets/private-outlet.js";
 import { renderAppLayout } from "../layout/app-layout.js";
 import { renderCreateEventPage } from "../pages/create_event_page.js";
 import { renderEventPage } from "../pages/event-page.js";
-import { renderTeacherSlotPage } from "../pages/teacher-slot.js";
+import { renderTeacherSlotAddPage } from "../teacher-panel/pages/teacher-slot-add.js";
 import { TeacherOutlet } from "../outlets/teacher-outlet.js";
+import { renderTeacherHome } from "../teacher-panel/pages/teacher-home.js";
+import { renderTeacherSlotsViewPage } from "../teacher-panel/pages/teacher-slots-view.js";
+import { renderEventEditPage } from "../pages/edit_event_page.js";
 
 function getPath() {
   const hash = window.location.hash || "#/";
@@ -51,14 +54,27 @@ export function createRouter(rootEl) {
       if (path === "/") pageCleanup = renderHome(layout.outlet);
       else if (path === "/create")
         pageCleanup = renderCreateEventPage(layout.outlet);
-      else if (path.startsWith("/event/")) {
+      else if (path.startsWith("/event/") && path.endsWith("/edit")) {
+        const id = path.split("/event/")[1].replace("/edit", "");
+        return renderEventEditPage(layout.outlet, id);
+      } else if (path.startsWith("/event/")) {
         const id = path.split("/event/")[1];
         return renderEventPage(layout.outlet, id);
-      } else if (path === "/teacher/slot") {
+      } else if (path === "/teacher/slot/add") {
         // Teacher-only page
         return TeacherOutlet(layout.outlet, () =>
-          renderTeacherSlotPage(layout.outlet)
+          renderTeacherSlotAddPage(layout.outlet)
         );
+      } else if (path === "/teacher/home") {
+        return TeacherOutlet(layout.outlet, () =>
+          renderTeacherHome(layout.outlet)
+        );
+      } else if (path === "/teacher/slots") {
+        return TeacherOutlet(layout.outlet, () =>
+          renderTeacherSlotsViewPage(layout.outlet)
+        );
+      } else if (path === "/teacher/events") {
+        return TeacherOutlet(layout.outlet, () => renderHome(layout.outlet));
       } else setHash("/");
 
       cleanup = () => {

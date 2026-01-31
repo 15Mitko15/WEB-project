@@ -6,6 +6,7 @@ final class Router
     private array $routes = [
         'GET' => [],
         'POST' => [],
+        'PUT' => [],
     ];
 
     public function get(string $path, callable|array $handler): void
@@ -16,6 +17,11 @@ final class Router
     public function post(string $path, callable|array $handler): void
     {
         $this->routes['POST'][$this->normalize($path)] = $handler;
+    }
+
+    public function put(string $path, callable|array $handler): void
+    {
+        $this->routes['PUT'][$this->normalize($path)] = $handler;
     }
 
     public function dispatch(string $method, string $path): void

@@ -1,6 +1,111 @@
 <?php
+declare(strict_types=1);
 
 require_once __DIR__ . '/event_service.php';
+require_once __DIR__ . '/../controllers/controller-helpers.php';
+
+/**
+ * ===== Helpers (procedural, consistent with your project)
+ */
+
+function slots_require_date(string $date): string
+{
+    $date = trim($date);
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+        throw new BadRequestException('Invalid date format. Use YYYY-MM-DD.');
+    }
+    return $date;
+}
+
+/**
+ * Accept "HH:MM" or "HH:MM:SS", return "HH:MM:SS".
+ */
+function slots_normalize_time(string $t): string
+{
+    $t = trim($t);
+    if ($t === '') {
+        throw new BadRequestException('Time is required.');
+    }
+
+    if (preg_match('/^\d{2}:\d{2}$/', $t)) {
+        return $t . ':00';
+    }
+    if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $t)) {
+        return $t;
+    }
+
+    throw new BadRequestException('Invalid time format. Use HH:MM or HH:MM:SS.');
+}
+
+function slots_time_to_minutes(string $hhmmss): int
+{
+    $hh = (int)substr($hhmmss, 0, 2);
+    $mm = (int)substr($hhmmss, 3, 2);
+    return $hh * 60 + $mm;
+}
+
+function slots_diff_minutes(string $start, string $end): int
+{
+    return slots_time_to_minutes($end) - slots_time_to_minutes($start);
+}
+
+function slots_hall_exists(PDO $conn, int $hallId): bool
+{
+    $stmt = $conn->prepare('SELECT id FROM halls WHERE id = :id LIMIT 1');
+    $stmt->execute(['id' => $hallId]);
+    return (bool)$stmt->fetchColumn();
+}
+
+/**
+ * Prevent exact duplicates.
+ */
+function slots_exact_exists(PDO $conn, string $slotDate, int $hallId, string $start, string $end): bool
+{
+    $stmt = $conn->prepare("
+        SELECT id
+        FROM slots
+        WHERE slot_date = :d
+          AND hall_id = :h
+          AND start_time = :s
+          AND end_time = :e
+        LIMIT 1
+    ");
+    $stmt->execute([
+        'd' => $slotDate,
+        'h' => $hallId,
+        's' => $start,
+        'e' => $end,
+    ]);
+    return (bool)$stmt->fetchColumn();
+}
+
+/**
+ * Prevent overlaps in the same hall on the same date.
+ * Overlap rule: new.start < existing.end AND new.end > existing.start
+ */
+function slots_overlaps_existing(PDO $conn, string $slotDate, int $hallId, string $start, string $end): bool
+{
+    $stmt = $conn->prepare("
+        SELECT id
+        FROM slots
+        WHERE slot_date = :d
+          AND hall_id = :h
+          AND :start < end_time
+          AND :end > start_time
+        LIMIT 1
+    ");
+    $stmt->execute([
+        'd' => $slotDate,
+        'h' => $hallId,
+        'start' => $start,
+        'end' => $end,
+    ]);
+    return (bool)$stmt->fetchColumn();
+}
+
+/**
+ * ===== Existing read endpoints (kept, lightly tightened)
+ */
 
 /**
  * Returns distinct slot dates.
@@ -8,15 +113,12 @@ require_once __DIR__ . '/event_service.php';
  */
 function return_slot_dates(PDO $conn, bool $includePast = false): array
 {
-    $sql = "
-        SELECT DISTINCT slot_date
-        FROM slots
-    ";
+    $sql = "SELECT DISTINCT slot_date FROM slots";
 
     if (!$includePast) {
         $sql .= "
-        WHERE slot_date > CURDATE()
-           OR (slot_date = CURDATE() AND end_time > CURTIME())
+            WHERE slot_date > CURDATE()
+               OR (slot_date = CURDATE() AND end_time > CURTIME())
         ";
     }
 
@@ -39,6 +141,8 @@ function return_slot_dates(PDO $conn, bool $includePast = false): array
  */
 function return_halls_with_slots_for_date(PDO $conn, string $date, bool $includePast = false): array
 {
+    $date = slots_require_date($date);
+
     $sql = "
         SELECT DISTINCT
             h.id AS hall_id,
@@ -52,10 +156,10 @@ function return_halls_with_slots_for_date(PDO $conn, string $date, bool $include
 
     if (!$includePast) {
         $sql .= "
-          AND (
+            AND (
                 s.slot_date > CURDATE()
              OR (s.slot_date = CURDATE() AND s.end_time > CURTIME())
-          )
+            )
         ";
     }
 
@@ -81,19 +185,18 @@ function return_slots(PDO $conn, ?int $hallId = null, ?string $date = null, bool
         $params['hall_id'] = $hallId;
     }
 
-    if ($date !== null && $date !== '') {
+    if ($date !== null && trim($date) !== '') {
+        $date = slots_require_date($date);
         $sql .= " AND slot_date = :slot_date";
         $params['slot_date'] = $date;
     }
 
     if (!$includePast) {
-        // If date is specified, apply "today not ended yet" only for today.
-        // If date is not specified, exclude all past and already-ended-today.
         $sql .= "
-          AND (
+            AND (
                 slot_date > CURDATE()
              OR (slot_date = CURDATE() AND end_time > CURTIME())
-          )
+            )
         ";
     }
 
@@ -105,114 +208,94 @@ function return_slots(PDO $conn, ?int $hallId = null, ?string $date = null, bool
     return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 }
 
-function get_available_slots($conn): array{
+/**
+ * ===== FIXED: event_in_slot (no SQL injection)
+ * Returns duration_minutes if the given time is inside a slot; otherwise 0.
+ *
+ * Note: using [start_time, end_time) (end is exclusive) is usually safer.
+ */
+function event_in_slot(string $date, string $time, int $hall_id, PDO $conn): int
+{
+    $date = slots_require_date($date);
+    $time = slots_normalize_time($time);
 
-	$sql = "SELECT slots.hall_id, slots.slot_date, slots.start_time, slots.end_time, slots.duration_minutes
-			FROM slots 
-			WHERE slot_date BETWEEN current_date() AND adddate(current_date(), interval 3 year)";
+    $stmt = $conn->prepare("
+        SELECT duration_minutes
+        FROM slots
+        WHERE slot_date = :d
+          AND hall_id = :h
+          AND :t >= start_time
+          AND :t < end_time
+        LIMIT 1
+    ");
+    $stmt->execute([
+        'd' => $date,
+        'h' => $hall_id,
+        't' => $time,
+    ]);
 
-	$stmt = $conn->prepare($sql);
-    $stmt->execute();
-
-    if($stmt->rowCount() > 0){
-
-    	$slots = array();
-
-    	while($row = $stmt->fetch(PDO::FETCH_ASSOC)){
-
-    		$datestamp_start = $row['slot_date'] . " " . $row['start_time'];
-    		$datestamp_end = $row['slot_date'] . " " . $row['end_time'];
-    		$events_time = return_events_time_in_timeframe_and_hall($datestamp_start, $datestamp_end, $row['hall_id'], $conn);
-
-    		$hours_start = (int)($row['start_time'][0] . $row['start_time'][1]);
-    		$minutes_start = (int)($row['start_time'][3] . $row['start_time'][4]);
-
-    		$hours_end = (int)($row['end_time'][0] . $row['end_time'][1]);
-    		$minutes_end = (int)($row['end_time'][3] . $row['end_time'][4]);
-
-    		$duration = (int)$row['duration_minutes'];
-
-    		$current_slots = array('hall_id' => $row['hall_id']);
-
-    		$current_slots['date'] = $row['slot_date'];
-
-    		$hall_slots = array();
-
-    		$unavailable_slot_pos = 0;
-
-    		$events_time[] = $events_time[0];
-
-    		$unavailable_slot = explode(' ', $events_time[$unavailable_slot_pos])[1];
-
-    		$slots_count = 0;
-
-    		while($hours_end > $hours_start || $minutes_end > $minutes_start){
-    			$extra_null = '';
-
-    			if($minutes_start < 10){
-    				$extra_null = '0';
-    			}
-    			$current_slot = (string)$hours_start . ':' . $extra_null . (string)$minutes_start . ':00';
-
-    			if($current_slot == $unavailable_slot){
-    				$unavailable_slot_pos += 1;
-
-    				$unavailable_slot = explode(' ', $events_time[$unavailable_slot_pos])[1];
-
-    			}
-    			else{
-    				//$slot_name = 'slot' . (string)$slots_count;
-
-    				$hall_slots[] = $current_slot;
-
-    				$slots_count +=1;
-    				
-    			}
-
-    			$minutes_start += $duration;
-    				if($minutes_start + $duration > 60){
-    					$minutes_start -= 60;
-    					$hours_start += 1;
-    				}
-
-    			
-    		}
-    		$current_slots['slots'] = $hall_slots;
-    		$current_slots['slots_count'] = $slots_count;
-    		$slots[] = $current_slots;
-
-    	}
-
-    	return $slots;
-    }
-    else{
-
-    	$slots = array();
-    	return $slots;
-
-    }
-
+    $dur = $stmt->fetchColumn();
+    return $dur ? (int)$dur : 0;
 }
 
-function event_in_slot(string $date, string $time,int $hall_id, $conn):int{
+/**
+ * ===== NEW: create_slot (procedural version of your broken $this-> method)
+ */
+function create_slot(PDO $conn, array $payload): array
+{
+    $slotDate = slots_require_date((string)($payload['slot_date'] ?? ''));
+    $hallId = (int)($payload['hall_id'] ?? 0);
+    $start = slots_normalize_time((string)($payload['start_time'] ?? ''));
+    $end   = slots_normalize_time((string)($payload['end_time'] ?? ''));
+    $duration = (int)($payload['duration_minutes'] ?? 0);
 
-	$sql = "SELECT slots.start_time, slots.duration_minutes
-			FROM slots 
-			WHERE slot_date = '$date' AND hall_id = '$hall_id' AND '$time' BETWEEN start_time AND end_time";
-
-	$stmt = $conn->prepare($sql);
-    $stmt->execute();
-
-    if($stmt->rowCount() > 0){
-    	$row = $stmt->fetch(PDO::FETCH_ASSOC);
-    	$duration = $row['duration_minutes'];
-
-    	return $duration;
+    if ($hallId <= 0) {
+        throw new BadRequestException('Invalid hall_id.');
     }
-    else{
-    	return 0;
+    if ($duration <= 0) {
+        throw new BadRequestException('Duration must be a positive number.');
     }
 
+    $available = slots_diff_minutes($start, $end);
+    if ($available <= 0) {
+        throw new BadRequestException('End time must be after start time.');
+    }
+    if ($duration > $available) {
+        throw new BadRequestException("Duration cannot be greater than the available window ({$available} minutes).");
+    }
+
+    if (!slots_hall_exists($conn, $hallId)) {
+        throw new BadRequestException('Hall not found.');
+    }
+
+    // Duplicate and overlap protection
+    if (slots_exact_exists($conn, $slotDate, $hallId, $start, $end)) {
+        throw new BadRequestException('A slot with the same date/time/hall already exists.');
+    }
+    if (slots_overlaps_existing($conn, $slotDate, $hallId, $start, $end)) {
+        throw new BadRequestException('Slot overlaps an existing slot for this hall and date.');
+    }
+
+    $stmt = $conn->prepare("
+        INSERT INTO slots (hall_id, slot_date, start_time, end_time, duration_minutes)
+        VALUES (:hall_id, :slot_date, :start_time, :end_time, :duration_minutes)
+    ");
+    $stmt->execute([
+        'hall_id' => $hallId,
+        'slot_date' => $slotDate,
+        'start_time' => $start,
+        'end_time' => $end,
+        'duration_minutes' => $duration,
+    ]);
+
+    $id = (int)$conn->lastInsertId();
+
+    return [
+        'id' => $id,
+        'hall_id' => $hallId,
+        'slot_date' => $slotDate,
+        'start_time' => $start,
+        'end_time' => $end,
+        'duration_minutes' => $duration,
+    ];
 }
-
-?>

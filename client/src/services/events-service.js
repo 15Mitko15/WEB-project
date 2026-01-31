@@ -48,15 +48,19 @@ export class EventsService {
     return result?.halls ?? [];
   }
 
-  async listSlotDates() {
-    const { result } = await http.get(ENDPOINTS.slotDates);
+  async listSlotDates({ includePast = false } = {}) {
+    const q = includePast ? "?include_past=1" : "";
+    const { result } = await http.get(`${ENDPOINTS.slotDates}${q}`);
     return result?.dates ?? [];
   }
 
-  async listSlotHallsByDate(date) {
-    const { result } = await http.get(
-      `${ENDPOINTS.slotHalls}?date=${encodeURIComponent(date)}`
-    );
+  async listSlotHallsByDate(date, { includePast = false } = {}) {
+    const q = new URLSearchParams({
+      date: String(date),
+      ...(includePast ? { include_past: "1" } : {}),
+    }).toString();
+
+    const { result } = await http.get(`${ENDPOINTS.slotHalls}?${q}`);
     return result?.halls ?? [];
   }
 
@@ -101,6 +105,41 @@ export class EventsService {
       body: { event_id, body, parent_id },
     });
     return result?.comment;
+  }
+
+  async listSlotsAll({ include_past = 0 } = {}) {
+    const { result } = await http.get(
+      `${ENDPOINTS.slots}?include_past=${encodeURIComponent(
+        String(include_past)
+      )}`
+    );
+    return result?.slots ?? [];
+  }
+
+  async updateEvent(id, patch) {
+    const { result } = await http.put(
+      `event?id=${encodeURIComponent(String(id))}`,
+      {
+        body: patch,
+      }
+    );
+    return result?.event ?? result;
+  }
+
+  async updateEvent(id, patch) {
+    // patch can contain: { title, description/event_description, hall_id, date, time, event_datetime }
+    if (typeof http.put !== "function") {
+      throw new Error("http.put() is not available in http-service.js");
+    }
+
+    const { result } = await http.put(
+      `event?id=${encodeURIComponent(String(id))}`,
+      {
+        body: patch,
+      }
+    );
+
+    return result?.event ?? result;
   }
 }
 

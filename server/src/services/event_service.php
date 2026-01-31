@@ -5,7 +5,8 @@ function return_events(int $user_id, $conn): array
 	$sql = "SELECT 	events.id, 						/*0*/
 					events.event_datetime, 			/*1*/
 					events.title, 					/*2*/
-					events.event_description, 		/*3*/
+					events.event_description, 
+					events.presenter_id AS presenter_id,		/*3*/
 					users.fn, 						/*4*/
 					users.first_name, 				/*5*/
 					users.last_name, 				/*6*/
@@ -37,6 +38,7 @@ function return_events(int $user_id, $conn): array
 			$event_hall_number = $row['hall_number'];
 			$event_faculty = $row['faculty_name'];
 			$event_current_user_interest = $row['interest'];
+			$event_presenter_id = $row['presenter_id'];
 			$event = array(
 							"id"=> $event_id,
 							"datetime"=> $event_datetime,
@@ -47,7 +49,8 @@ function return_events(int $user_id, $conn): array
 							"hall"=> $event_hall_number,
 							"faculty"=> $event_faculty,
 							"user_interest"=> $event_current_user_interest,
-							"description" => $event_description
+							"description" => $event_description,
+							"presenter_id" => $event_presenter_id
 						);
 
 			$all_events[] = $event;
@@ -204,6 +207,8 @@ function return_event_by_id(PDO $conn, int $eventId, int $userId): ?array
         SELECT
             e.id,
             e.event_datetime AS datetime,
+			e.hall_id AS hall_id,
+			e.presenter_id AS presenter_id,
             e.title,
             e.event_description,
             u.fn AS presenter_fn,
@@ -267,4 +272,137 @@ function return_event_attendees_grouped(PDO $conn, int $eventId): array
     }
     return $groups;
 }
+
+function events_get_role_id(PDO $conn, int $userId): int
+{
+    $stmt = $conn->prepare("SELECT role_id FROM users WHERE id = :id LIMIT 1");
+    $stmt->execute(['id' => $userId]);
+    return (int)($stmt->fetchColumn() ?: 0);
+}
+
+function events_get_presenter_id(PDO $conn, int $eventId): int
+{
+    $stmt = $conn->prepare("SELECT presenter_id FROM events WHERE id = :id LIMIT 1");
+    $stmt->execute(['id' => $eventId]);
+    return (int)($stmt->fetchColumn() ?: 0);
+}
+
+function events_hall_exists(PDO $conn, int $hallId): bool
+{
+    $stmt = $conn->prepare("SELECT id FROM halls WHERE id = :id LIMIT 1");
+    $stmt->execute(['id' => $hallId]);
+    return (bool)$stmt->fetchColumn();
+}
+
+function events_require_date(string $date): string
+{
+    $date = trim($date);
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+        throw new BadRequestException('Invalid date format. Use YYYY-MM-DD.');
+    }
+    return $date;
+}
+
+function events_normalize_time(string $t): string
+{
+    $t = trim($t);
+    if ($t === '') {
+        throw new BadRequestException('Time is required.');
+    }
+    if (preg_match('/^\d{2}:\d{2}$/', $t)) return $t . ':00';
+    if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $t)) return $t;
+    throw new BadRequestException('Invalid time format. Use HH:MM or HH:MM:SS.');
+}
+
+/**
+ * Partial update ("PATCH semantics") with auth rule:
+ * allowed if actor is presenter OR actor role_id == 2.
+ *
+ * Supported fields:
+ * - title
+ * - event_description (or description)
+ * - hall_id
+ * - event_datetime OR (date + time)
+ *
+ * Returns the updated event in the same shape as return_event_by_id().
+ */
+function update_event(PDO $conn, int $eventId, array $payload, int $actorUserId): array
+{
+    // Ensure event exists + permission check
+    $presenterId = events_get_presenter_id($conn, $eventId);
+    if ($presenterId <= 0) {
+        throw new BadRequestException('Event not found.');
+    }
+
+    $roleId = events_get_role_id($conn, $actorUserId);
+    if ($actorUserId !== $presenterId && $roleId !== 2) {
+        throw new UnauthorizedException('Forbidden.');
+    }
+
+    $sets = [];
+    $params = ['id' => $eventId];
+
+    // title
+    if (array_key_exists('title', $payload)) {
+        $title = trim((string)$payload['title']);
+        if ($title === '') throw new BadRequestException('Title cannot be empty.');
+        $sets[] = "title = :title";
+        $params['title'] = $title;
+    }
+
+    // description
+    if (array_key_exists('event_description', $payload) || array_key_exists('description', $payload)) {
+        $desc = (string)($payload['event_description'] ?? $payload['description'] ?? '');
+        $sets[] = "event_description = :event_description";
+        $params['event_description'] = $desc;
+    }
+
+    // hall
+    if (array_key_exists('hall_id', $payload)) {
+        $hallId = (int)$payload['hall_id'];
+        if ($hallId <= 0) throw new BadRequestException('Invalid hall_id.');
+        if (!events_hall_exists($conn, $hallId)) throw new BadRequestException('Hall not found.');
+        $sets[] = "hall_id = :hall_id";
+        $params['hall_id'] = $hallId;
+    }
+
+    // datetime: accept event_datetime OR (date+time)
+    if (array_key_exists('event_datetime', $payload)) {
+        $dt = trim((string)$payload['event_datetime']);
+        $dt = str_replace('T', ' ', $dt);
+        if (preg_match('/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}$/', $dt)) $dt .= ':00';
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}$/', $dt)) {
+            throw new BadRequestException('Invalid event_datetime. Use YYYY-MM-DD HH:MM:SS.');
+        }
+        $sets[] = "event_datetime = :event_datetime";
+        $params['event_datetime'] = $dt;
+    } elseif (array_key_exists('date', $payload) || array_key_exists('time', $payload)) {
+        $date = trim((string)($payload['date'] ?? ''));
+        $time = trim((string)($payload['time'] ?? ''));
+        if ($date === '' || $time === '') {
+            throw new BadRequestException('Both date and time are required to update event time.');
+        }
+        $date = events_require_date($date);
+        $time = events_normalize_time($time);
+        $sets[] = "event_datetime = :event_datetime";
+        $params['event_datetime'] = $date . ' ' . $time;
+    }
+
+    if (!$sets) {
+        throw new BadRequestException('No fields to update.');
+    }
+
+    $sql = "UPDATE events SET " . implode(', ', $sets) . ", updated_at = NOW() WHERE id = :id";
+    $stmt = $conn->prepare($sql);
+    $stmt->execute($params);
+
+    // Reuse your existing shape for frontend
+    $updated = return_event_by_id($conn, $eventId, $actorUserId);
+    if ($updated === null) {
+        throw new RuntimeException('Failed to load updated event.');
+    }
+
+    return $updated;
+}
+
 ?>

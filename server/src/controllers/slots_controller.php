@@ -33,17 +33,19 @@ final class SlotController
         if (!check_logged_in()) {
             throw new UnauthorizedException('Not logged in.');
         }
-
+    
         $hallId = isset($_GET['hall_id']) ? (int)$_GET['hall_id'] : null;
         $date = isset($_GET['date']) ? trim((string)$_GET['date']) : null;
-
-        $items = return_slots($this->conn, $hallId, $date);
-
+        $includePast = (int)($_GET['include_past'] ?? 0) === 1;
+    
+        $items = return_slots($this->conn, $hallId, $date, $includePast);
+    
         json(200, [
             'ok' => true,
             'slots' => $items,
         ]);
     }
+    
 
     public function slot_events(): void
     {
@@ -125,4 +127,48 @@ final class SlotController
         ]);
     }
 
+    public function create(): void
+    {
+        if (!check_logged_in()) {
+            throw new UnauthorizedException('Not logged in.');
+        }
+    
+        $userId = (int)($_SESSION['user_id'] ?? 0);
+        if ($userId <= 0) {
+            throw new UnauthorizedException('Session is missing user.');
+        }
+    
+        // Role guard: require teacher (role_id = 2)
+        $stmt = $this->conn->prepare("SELECT role_id FROM users WHERE id = :id LIMIT 1");
+        $stmt->execute(['id' => $userId]);
+        $roleId = (int)($stmt->fetchColumn() ?: 0);
+    
+        if ($roleId !== 2) {
+            throw new UnauthorizedException('Forbidden.'); // If you have ForbiddenException, use that instead.
+        }
+    
+        $data = readInput();
+    
+        // Accept both "date" or "slot_date" (as you intended)
+        $slotDate = trim((string)($data['slot_date'] ?? $data['date'] ?? ''));
+        $hallId = (int)($data['hall_id'] ?? 0);
+        $start = trim((string)($data['start_time'] ?? ''));
+        $end   = trim((string)($data['end_time'] ?? ''));
+        $duration = (int)($data['duration_minutes'] ?? 0);
+    
+        // Delegate full validation to service (keeps controller small)
+        $created = create_slot($this->conn, [
+            'slot_date' => $slotDate,
+            'hall_id' => $hallId,
+            'start_time' => $start,
+            'end_time' => $end,
+            'duration_minutes' => $duration,
+        ]);
+    
+        json(201, [
+            'ok' => true,
+            'slot' => $created,
+        ]);
+    }
+    
 }

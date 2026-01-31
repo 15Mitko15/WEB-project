@@ -169,4 +169,36 @@ final class EventController
         json(201, ['ok' => true, 'comment' => $created]);
     }
 
+    public function update(): void
+{
+    if (!check_logged_in()) {
+        throw new UnauthorizedException('Not logged in.');
+    }
+
+    $userId = (int)($_SESSION['user_id'] ?? 0);
+    if ($userId <= 0) {
+        throw new UnauthorizedException('Session is missing user.');
+    }
+
+    // You can pass id via query (?id=) or in body
+    $eventId = (int)($_GET['id'] ?? 0);
+
+    $data = readInput();
+    if ($eventId <= 0) {
+        $eventId = (int)($data['id'] ?? 0);
+    }
+
+    if ($eventId <= 0) {
+        throw new BadRequestException('Event id is required.');
+    }
+
+    $updated = update_event($this->conn, $eventId, $data, $userId);
+
+    json(200, [
+        'ok' => true,
+        'event' => $updated,
+    ]);
+}
+
+
 }

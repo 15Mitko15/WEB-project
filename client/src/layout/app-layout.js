@@ -1,16 +1,53 @@
 import { authService } from "../services/auth-service.js";
+import { userInfoService } from "../services/user-info-service.js";
+
+function escapeHtml(str) {
+  return String(str ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function getWelcomeName(user) {
+  // Try common shapes
+  const first =
+    user?.first_name ?? user?.firstName ?? user?.name?.split?.(" ")?.[0] ?? "";
+  const last =
+    user?.last_name ??
+    user?.lastName ??
+    user?.name?.split?.(" ")?.slice?.(1).join(" ") ??
+    "" ??
+    "";
+
+  const full = `${first} ${last}`.trim();
+  if (full) return full;
+
+  const email = user?.email ?? user?.user_email ?? "";
+  if (email) return email;
+
+  return "";
+}
 
 export function renderAppLayout(rootEl) {
+  const user = userInfoService.currentUser;
+  const welcomeName = getWelcomeName(user);
+
   rootEl.innerHTML = `
     <div class="app">
       <header class="topbar">
-        <div class="topbar__left">
           <button id="homeBtn" class="topbar__home" type="button" aria-label="Home">
             Home
           </button>
-        </div>
-
         <div class="topbar__right">
+            <div class="topbar__welcome" aria-label="Welcome message">
+            ${
+              welcomeName
+                ? `Welcome, <strong>${escapeHtml(welcomeName)}</strong>`
+                : `Welcome`
+            }
+            </div>
           <div class="menu">
             <button
               id="menuBtn"
@@ -28,18 +65,22 @@ export function renderAppLayout(rootEl) {
                 <circle cx="12" cy="19" r="2"></circle>
               </svg>
             </button>
-
             <div id="menu" class="menu__panel" role="menu" aria-hidden="true">
-              <button id="addEventBtn" class="menu__item" type="button" role="menuitem">
-                Add an event
-              </button>
-              <button id="viewEventsBtn" class="menu__item" type="button" role="menuitem">
-                View my events
-              </button>
-              <div class="menu__sep" role="separator"></div>
-              <button id="logoutBtn" class="menu__item menu__item--danger" type="button" role="menuitem">
-                Logout
-              </button>
+                <button id="addEventBtn" class="menu__item" type="button" role="menuitem">
+                    Add an event
+                </button>
+                <button id="viewEventsBtn" class="menu__item" type="button" role="menuitem">
+                    View my events
+                </button>
+
+                <button id="teacherPageBtn" class="menu__item" type="button" role="menuitem" style="display:none">
+                    Teacher page
+                </button>
+
+                <div class="menu__sep" role="separator"></div>
+                <button id="logoutBtn" class="menu__item menu__item--danger" type="button" role="menuitem">
+                    Logout
+                </button>
             </div>
           </div>
         </div>
@@ -59,6 +100,13 @@ export function renderAppLayout(rootEl) {
   const addEventBtn = rootEl.querySelector("#addEventBtn");
   const viewEventsBtn = rootEl.querySelector("#viewEventsBtn");
   const logoutBtn = rootEl.querySelector("#logoutBtn");
+  const teacherPageBtn = rootEl.querySelector("#teacherPageBtn");
+
+  const isAdmin = Number(user?.role_id) === 2;
+
+  if (isAdmin) {
+    teacherPageBtn.style.display = "block";
+  }
 
   let isOpen = false;
 
@@ -82,7 +130,6 @@ export function renderAppLayout(rootEl) {
   }
 
   function onDocumentClick(e) {
-    // close if click is outside menu button/panel
     if (!menu.contains(e.target) && !menuBtn.contains(e.target)) {
       closeMenu();
     }
@@ -113,8 +160,12 @@ export function renderAppLayout(rootEl) {
 
   function onViewEvents() {
     closeMenu();
-    // no-op for now
     // later: window.location.hash = "#/events";
+  }
+
+  function onTeacherPage() {
+    closeMenu();
+    window.location.hash = "#/teacher/home";
   }
 
   homeBtn.addEventListener("click", onHome);
@@ -125,6 +176,7 @@ export function renderAppLayout(rootEl) {
 
   document.addEventListener("click", onDocumentClick);
   document.addEventListener("keydown", onKeyDown);
+  teacherPageBtn.addEventListener("click", onTeacherPage);
 
   return {
     outlet,
@@ -137,6 +189,7 @@ export function renderAppLayout(rootEl) {
 
       document.removeEventListener("click", onDocumentClick);
       document.removeEventListener("keydown", onKeyDown);
+      teacherPageBtn.removeEventListener("click", onTeacherPage);
     },
   };
 }

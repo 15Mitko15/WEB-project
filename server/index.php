@@ -74,5 +74,7 @@ $router->get('/event', [EventController::class, 'event']);
 $router->get('/event_attendees', [EventController::class, 'attendees']);
 $router->get('/event_comments', [EventController::class, 'comments']);
 $router->post('/event_comments', [EventController::class, 'add_comment']);
+$router->post('/slots', [SlotController::class, 'create']);
+$router->put('/event', [EventController::class, 'update']);
 
 $router->dispatch($method, $path);

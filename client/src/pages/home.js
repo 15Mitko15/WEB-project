@@ -1,6 +1,7 @@
 import { createAsyncAction } from "../hooks/async.js";
 import { eventsService } from "../services/events-service.js";
 import { createStatusDropdown } from "../components/statusDropdown.js";
+import { userInfoService } from "../services/user-info-service.js";
 
 function escapeHtml(str) {
   return String(str)
@@ -22,7 +23,29 @@ function formatEventDate(isoString) {
   return { month, day, time };
 }
 
-function eventRowElement(event, interests) {
+function getPresenterId(ev) {
+  return Number(ev?.presenter_id ?? ev?.presenterId ?? 0);
+}
+
+function isTeacherEventsRoute() {
+  const hash = window.location.hash || "#/";
+  return hash === "#/teacher/events" || hash.startsWith("#/teacher/events");
+}
+
+function canEditEvent(ev, me) {
+  if (!me) return false;
+
+  const presenterId = getPresenterId(ev);
+  const isOwner = presenterId && Number(me.id) === presenterId;
+
+  // Admin can edit all only on teacher/events
+  if (isTeacherEventsRoute() && Number(me.role_id) === 2) return true;
+
+  // Otherwise only their own
+  return isOwner;
+}
+
+function eventRowElement(event, interests, me) {
   const { month, day, time } = formatEventDate(event.datetime || event.date);
 
   const row = document.createElement("article");
@@ -53,12 +76,12 @@ function eventRowElement(event, interests) {
           )}</p>
         </div>
 
-        <div class="event-actions" data-dropdown-slot></div>
+        <div class="event-actions" data-actions></div>
       </div>
     </div>
   `;
 
-  const slot = row.querySelector("[data-dropdown-slot]");
+  const actions = row.querySelector("[data-actions]");
 
   const initialId =
     event.user_interest_id ??
@@ -74,11 +97,25 @@ function eventRowElement(event, interests) {
   // IMPORTANT: event delegation will handle changes, so we tag the select
   select.dataset.eventId = String(event.id);
 
-  slot.appendChild(wrapper);
+  actions.appendChild(wrapper);
+
+  // --- Edit link (NEW) ---
+  if (canEditEvent(event, me)) {
+    const edit = document.createElement("a");
+    edit.className = "event-edit";
+    edit.href = `#/event/${event.id}/edit`;
+    edit.setAttribute("aria-label", "Edit event");
+    edit.innerHTML = `<span class="event-edit-icon">✏️</span><span>Edit</span>`;
+    actions.appendChild(edit);
+  }
+
   return row;
 }
 
 export function renderHome(container) {
+  // Current user (provided by userInfoService)
+  const me = userInfoService.currentUser || null;
+
   // ---------- UI shell (render once) ----------
   container.innerHTML = `
   <header class="home-header">
@@ -130,6 +167,19 @@ export function renderHome(container) {
 
   <p class="empty-state" id="homeMsg">Loading events…</p>
 `;
+
+  // Optional: if you want different title/subtitle on teacher/events (no behavior change)
+  if (isTeacherEventsRoute()) {
+    const titleEl = container.querySelector(".home-title");
+    const subEl = container.querySelector(".home-subtitle");
+    if (titleEl) titleEl.textContent = "Teacher Events";
+    if (subEl) {
+      subEl.textContent =
+        Number(me?.role_id) === 2
+          ? "You can edit all events here."
+          : "You can edit your own events here.";
+    }
+  }
 
   const list = container.querySelector(".events-list");
   const exportCsvBtn = container.querySelector("#export-csv");
@@ -321,8 +371,6 @@ export function renderHome(container) {
       const da = new Date(a.datetime || a.date).getTime();
       const db = new Date(b.datetime || b.date).getTime();
 
-      console.log(da, db);
-
       // If any invalid dates slip in, push them to the end
       if (!Number.isFinite(da) && !Number.isFinite(db)) return 0;
       if (!Number.isFinite(da)) return 1;
@@ -467,7 +515,7 @@ export function renderHome(container) {
     msg.style.display = "none";
 
     for (const ev of pageItems) {
-      list.appendChild(eventRowElement(ev, interests));
+      list.appendChild(eventRowElement(ev, interests, me));
     }
 
     renderPagination(totalPages);
@@ -479,8 +527,6 @@ export function renderHome(container) {
       eventsService.list(),
       eventsService.listInterests(),
     ]);
-    console.log(evs);
-    console.log(ints);
     return { events: evs, interests: ints };
   });
 
@@ -522,11 +568,7 @@ export function renderHome(container) {
   });
 
   const unsubUpdate = updateStatusAction.subscribe((s) => {
-    // Optional: you can show a tiny message while saving
-    if (s.status === "loading") {
-      // could show "Saving..." somewhere, but keeping it quiet is fine
-      return;
-    }
+    if (s.status === "loading") return;
 
     if (s.status === "error") {
       // easiest: reload to ensure UI is correct if save fails
