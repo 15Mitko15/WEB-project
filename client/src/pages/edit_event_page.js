@@ -251,8 +251,6 @@ export function renderEventEditPage(rootEl, eventId) {
         return;
       }
 
-      console.log("CURRENT EVENT", currentEvent);
-
       // Prepopulate text fields immediately
       titleInput.value = currentEvent.title ?? "";
       descInput.value =

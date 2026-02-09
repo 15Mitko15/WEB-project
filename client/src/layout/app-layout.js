@@ -69,9 +69,6 @@ export function renderAppLayout(rootEl) {
                 <button id="addEventBtn" class="menu__item" type="button" role="menuitem">
                     Add an event
                 </button>
-                <button id="viewEventsBtn" class="menu__item" type="button" role="menuitem">
-                    View my events
-                </button>
 
                 <button id="teacherPageBtn" class="menu__item" type="button" role="menuitem" style="display:none">
                     Teacher page
@@ -98,7 +95,6 @@ export function renderAppLayout(rootEl) {
   const menuBtn = rootEl.querySelector("#menuBtn");
   const menu = rootEl.querySelector("#menu");
   const addEventBtn = rootEl.querySelector("#addEventBtn");
-  const viewEventsBtn = rootEl.querySelector("#viewEventsBtn");
   const logoutBtn = rootEl.querySelector("#logoutBtn");
   const teacherPageBtn = rootEl.querySelector("#teacherPageBtn");
 
@@ -150,7 +146,11 @@ export function renderAppLayout(rootEl) {
 
   function onHome() {
     closeMenu();
-    window.location.hash = "#/";
+
+    const hash = window.location.hash || "#/";
+    const isTeacherRoute = hash.startsWith("#/teacher");
+
+    window.location.hash = isTeacherRoute ? "#/teacher/home" : "#/";
   }
 
   function onAddEvent() {
@@ -172,7 +172,6 @@ export function renderAppLayout(rootEl) {
   menuBtn.addEventListener("click", toggleMenu);
   logoutBtn.addEventListener("click", onLogout);
   addEventBtn.addEventListener("click", onAddEvent);
-  viewEventsBtn.addEventListener("click", onViewEvents);
 
   document.addEventListener("click", onDocumentClick);
   document.addEventListener("keydown", onKeyDown);
@@ -185,7 +184,6 @@ export function renderAppLayout(rootEl) {
       menuBtn.removeEventListener("click", toggleMenu);
       logoutBtn.removeEventListener("click", onLogout);
       addEventBtn.removeEventListener("click", onAddEvent);
-      viewEventsBtn.removeEventListener("click", onViewEvents);
 
       document.removeEventListener("click", onDocumentClick);
       document.removeEventListener("keydown", onKeyDown);

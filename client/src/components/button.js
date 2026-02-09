@@ -12,10 +12,6 @@ export function Button({
   btn.textContent = label ?? "Button";
   btn.disabled = Boolean(disabled);
 
-  console.log(btn.outerHTML);
-  console.log(btn.textContent);
-  console.log(btn);
-
   if (onClick) btn.addEventListener("click", onClick);
   return btn;
 }
