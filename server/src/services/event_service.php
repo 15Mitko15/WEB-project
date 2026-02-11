@@ -5,7 +5,8 @@ function return_events(int $user_id, $conn): array
 	$sql = "SELECT 	events.id, 						/*0*/
 					events.event_datetime, 			/*1*/
 					events.title, 					/*2*/
-					events.event_description, 		/*3*/
+					events.event_description, 
+					events.presenter_id AS presenter_id,		/*3*/
 					users.fn, 						/*4*/
 					users.first_name, 				/*5*/
 					users.last_name, 				/*6*/
@@ -20,37 +21,24 @@ function return_events(int $user_id, $conn): array
 				AND attendings.user_id = :user_id 
 			LEFT JOIN interests on attendings.interest_id = interests.id ";
 
-	//$query = $conn->query($sql) or die("failed!"); //CHANGE WITH THE MORE APROPRIATE METHODES OF APROACH
-
 	$stmt = $conn->prepare($sql);
     $stmt->execute(['user_id' => $user_id]);
 
+	$all_events = array();
+
 	if($stmt->rowCount() > 0){
-
-		$all_events = array();
-
 		while($row = $stmt->fetch(PDO::FETCH_ASSOC)){
-
 			$event_id = $row['id'];
-
 			$event_datetime = $row['event_datetime'];
-
 			$event_title = $row['title'];
-
 			$event_description = $row['event_description'];
-
 			$event_presenter_fn = $row['fn'];
-
 			$event_presenter_first_name = $row['first_name'];
-
 			$event_presenter_last_name = $row['last_name'];
-
 			$event_hall_number = $row['hall_number'];
-
 			$event_faculty = $row['faculty_name'];
-
 			$event_current_user_interest = $row['interest'];
-
+			$event_presenter_id = $row['presenter_id'];
 			$event = array(
 							"id"=> $event_id,
 							"datetime"=> $event_datetime,
@@ -60,50 +48,41 @@ function return_events(int $user_id, $conn): array
 							"presenter_last_name"=> $event_presenter_last_name,
 							"hall"=> $event_hall_number,
 							"faculty"=> $event_faculty,
-							"user_interest"=> $event_current_user_interest
+							"user_interest"=> $event_current_user_interest,
+							"description" => $event_description,
+							"presenter_id" => $event_presenter_id
 						);
 
 			$all_events[] = $event;
-
 		}
-
-		return $all_events;
-
 	}
 
-	else{
+	return $all_events;
 
-		$all_events = array();
-
-		return $all_events;
-
-	}
 }
+function return_events_time_in_timeframe_and_hall(
+    string $datestamp_start,
+    string $datestamp_end,
+    int $hall_id,
+    PDO $conn
+): array {
+    $sql = "SELECT event_datetime
+            FROM events
+            WHERE hall_id = :hall_id
+              AND event_datetime BETWEEN :start AND :end";
 
-function return_events_time_in_timeframe_and_hall(string $datestamp_start, string $datestamp_end, int $hall_id, $conn): array{
+    $stmt = $conn->prepare($sql);
+    $stmt->execute([
+        'hall_id' => $hall_id,
+        'start' => $datestamp_start,
+        'end' => $datestamp_end,
+    ]);
 
-	$sql = "SELECT event_datetime FROM events 
-			WHERE hall_id = $hall_id AND event_datetime BETWEEN '$datestamp_start' AND '$datestamp_end'";
-
-	$stmt = $conn->prepare($sql);
-    $stmt->execute();
-
-    if($stmt->rowCount() > 0){
-    	$events_time = array();
-
-    	while($row = $stmt->fetch(PDO::FETCH_ASSOC)){
-    		$events_time[] = $row['event_datetime'];
-    	}
-
-    	return $events_time;
+    $times = [];
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $times[] = $row['event_datetime'];
     }
-    else{
-
-    	$events_time = array();
-    	return $events;
-
-    }
-
+    return $times;
 }
 
 function edit_attending_preference(int $user_id, int $event_id, int $new_interest_id, $conn): string{
@@ -176,12 +155,282 @@ function can_register_event(string $time_start, string $time_end, string $date ,
     return(!$stmt->rowCount() > 0);
 }
 
-function register_event(string $datetime, int $hall_id, int $user_id, string $title, string $description, $conn): void {
-	$sql = "INSERT INTO events (id, event_datetime, hall_id, presenter_id, title, event_description, created_at, updated_at)
-			VALUES (null, '$datetime', '$hall_id', '$user_id', '$title', '$description', current_timestamp(), current_timestamp())";
+function register_event(
+    string $datetime,
+    int $hall_id,
+    int $user_id,
+    string $title,
+    string $description,
+    PDO $conn
+): void {
+    $sql = "INSERT INTO events (event_datetime, hall_id, presenter_id, title, event_description, created_at, updated_at)
+            VALUES (:dt, :hall, :presenter, :title, :desc, NOW(), NOW())";
 
-	$stmt = $conn->prepare($sql);
-    $stmt->execute();
+    $stmt = $conn->prepare($sql);
+    $stmt->execute([
+        'dt' => $datetime,
+        'hall' => $hall_id,
+        'presenter' => $user_id,
+        'title' => $title,
+        'desc' => $description,
+    ]);
+}
+
+function return_events_for_slot(PDO $conn, int $slotId, int $currentUserId = 0): array
+{
+    $sql = "
+        SELECT
+            e.id,
+            e.event_datetime AS datetime,
+            e.title,
+            e.event_description,
+            e.hall_id,
+            e.presenter_id
+        FROM slots s
+        JOIN events e
+          ON e.hall_id = s.hall_id
+         AND e.event_datetime >= CONCAT(s.slot_date, ' ', s.start_time)
+         AND e.event_datetime <  CONCAT(s.slot_date, ' ', s.end_time)
+        WHERE s.id = :slot_id
+        ORDER BY e.event_datetime ASC
+    ";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->execute(['slot_id' => $slotId]);
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+}
+
+function return_event_by_id(PDO $conn, int $eventId, int $userId): ?array
+{
+    $sql = "
+        SELECT
+            e.id,
+            e.event_datetime AS datetime,
+			e.hall_id AS hall_id,
+			e.presenter_id AS presenter_id,
+            e.title,
+            e.event_description,
+            u.fn AS presenter_fn,
+            u.first_name AS presenter_first_name,
+            u.last_name AS presenter_last_name,
+            h.hall_number AS hall,
+            f.name AS faculty,
+            a.interest_id AS user_interest_id,
+            i.name AS user_interest
+        FROM events e
+        JOIN users u ON u.id = e.presenter_id
+        JOIN halls h ON h.id = e.hall_id
+        JOIN faculties f ON f.id = h.faculty_id
+        LEFT JOIN attendings a
+          ON a.event_id = e.id
+         AND a.user_id = :uid
+        LEFT JOIN interests i ON i.id = a.interest_id
+        WHERE e.id = :eid
+        LIMIT 1
+    ";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->execute([
+        'eid' => $eventId,
+        'uid' => $userId > 0 ? $userId : -1,
+    ]);
+
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $row ?: null;
+}
+
+function return_event_attendees_grouped(PDO $conn, int $eventId): array
+{
+    $sql = "
+        SELECT
+            i.name AS interest_name,
+            u.id,
+            u.first_name,
+            u.last_name,
+            u.fn
+        FROM attendings a
+        JOIN interests i ON i.id = a.interest_id
+        JOIN users u ON u.id = a.user_id
+        WHERE a.event_id = :eid
+        ORDER BY i.name ASC, u.first_name ASC, u.last_name ASC
+    ";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->execute(['eid' => $eventId]);
+
+    $groups = [];
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $key = $row['interest_name'];
+        if (!isset($groups[$key])) $groups[$key] = [];
+        $groups[$key][] = [
+            'id' => (int)$row['id'],
+            'first_name' => $row['first_name'],
+            'last_name' => $row['last_name'],
+            'fn' => $row['fn'],
+        ];
+    }
+    return $groups;
+}
+
+function events_get_role_id(PDO $conn, int $userId): int
+{
+    $stmt = $conn->prepare("SELECT role_id FROM users WHERE id = :id LIMIT 1");
+    $stmt->execute(['id' => $userId]);
+    return (int)($stmt->fetchColumn() ?: 0);
+}
+
+function events_get_presenter_id(PDO $conn, int $eventId): int
+{
+    $stmt = $conn->prepare("SELECT presenter_id FROM events WHERE id = :id LIMIT 1");
+    $stmt->execute(['id' => $eventId]);
+    return (int)($stmt->fetchColumn() ?: 0);
+}
+
+function events_hall_exists(PDO $conn, int $hallId): bool
+{
+    $stmt = $conn->prepare("SELECT id FROM halls WHERE id = :id LIMIT 1");
+    $stmt->execute(['id' => $hallId]);
+    return (bool)$stmt->fetchColumn();
+}
+
+function events_require_date(string $date): string
+{
+    $date = trim($date);
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+        throw new BadRequestException('Invalid date format. Use YYYY-MM-DD.');
+    }
+    return $date;
+}
+
+function events_normalize_time(string $t): string
+{
+    $t = trim($t);
+    if ($t === '') {
+        throw new BadRequestException('Time is required.');
+    }
+    if (preg_match('/^\d{2}:\d{2}$/', $t)) return $t . ':00';
+    if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $t)) return $t;
+    throw new BadRequestException('Invalid time format. Use HH:MM or HH:MM:SS.');
+}
+
+/**
+ * Partial update ("PATCH semantics") with auth rule:
+ * allowed if actor is presenter OR actor role_id == 2.
+ *
+ * Supported fields:
+ * - title
+ * - event_description (or description)
+ * - hall_id
+ * - event_datetime OR (date + time)
+ *
+ * Returns the updated event in the same shape as return_event_by_id().
+ */
+function update_event(PDO $conn, int $eventId, array $payload, int $actorUserId): array
+{
+    // Ensure event exists + permission check
+    $presenterId = events_get_presenter_id($conn, $eventId);
+    if ($presenterId <= 0) {
+        throw new BadRequestException('Event not found.');
+    }
+
+    $roleId = events_get_role_id($conn, $actorUserId);
+    if ($actorUserId !== $presenterId && $roleId !== 2) {
+        throw new UnauthorizedException('Forbidden.');
+    }
+
+    $sets = [];
+    $params = ['id' => $eventId];
+
+    // title
+    if (array_key_exists('title', $payload)) {
+        $title = trim((string)$payload['title']);
+        if ($title === '') throw new BadRequestException('Title cannot be empty.');
+        $sets[] = "title = :title";
+        $params['title'] = $title;
+    }
+
+    // description
+    if (array_key_exists('event_description', $payload) || array_key_exists('description', $payload)) {
+        $desc = (string)($payload['event_description'] ?? $payload['description'] ?? '');
+        $sets[] = "event_description = :event_description";
+        $params['event_description'] = $desc;
+    }
+
+    // hall
+    if (array_key_exists('hall_id', $payload)) {
+        $hallId = (int)$payload['hall_id'];
+        if ($hallId <= 0) throw new BadRequestException('Invalid hall_id.');
+        if (!events_hall_exists($conn, $hallId)) throw new BadRequestException('Hall not found.');
+        $sets[] = "hall_id = :hall_id";
+        $params['hall_id'] = $hallId;
+    }
+
+    // datetime: accept event_datetime OR (date+time)
+    if (array_key_exists('event_datetime', $payload)) {
+        $dt = trim((string)$payload['event_datetime']);
+        $dt = str_replace('T', ' ', $dt);
+        if (preg_match('/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}$/', $dt)) $dt .= ':00';
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}$/', $dt)) {
+            throw new BadRequestException('Invalid event_datetime. Use YYYY-MM-DD HH:MM:SS.');
+        }
+        $sets[] = "event_datetime = :event_datetime";
+        $params['event_datetime'] = $dt;
+    } elseif (array_key_exists('date', $payload) || array_key_exists('time', $payload)) {
+        $date = trim((string)($payload['date'] ?? ''));
+        $time = trim((string)($payload['time'] ?? ''));
+        if ($date === '' || $time === '') {
+            throw new BadRequestException('Both date and time are required to update event time.');
+        }
+        $date = events_require_date($date);
+        $time = events_normalize_time($time);
+        $sets[] = "event_datetime = :event_datetime";
+        $params['event_datetime'] = $date . ' ' . $time;
+    }
+
+    if (!$sets) {
+        throw new BadRequestException('No fields to update.');
+    }
+
+    $sql = "UPDATE events SET " . implode(', ', $sets) . ", updated_at = NOW() WHERE id = :id";
+    $stmt = $conn->prepare($sql);
+    $stmt->execute($params);
+
+    // Reuse your existing shape for frontend
+    $updated = return_event_by_id($conn, $eventId, $actorUserId);
+    if ($updated === null) {
+        throw new RuntimeException('Failed to load updated event.');
+    }
+
+    return $updated;
+}
+
+function delete_event(PDO $conn, int $eventId, int $userId): bool
+{
+    $sql = "SELECT  presenter_id
+            FROM events 
+            WHERE id = :user_id";
+    $stmt = $conn->prepare($sql);
+    $stmt->execute(['user_id' => $userId]);
+
+    if($stmt->rowCount() == 0){
+        throw new BadRequestException('Event not found.');
+    }
+
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $roleId = events_get_role_id($conn, $actorUserId);
+
+    if ($userId !== $row['presenter_id'] && $roleId !== 2) {
+        throw new UnauthorizedException('Forbidden.');
+    }
+
+    $del = $conn->prepare("
+            DELETE FROM events
+            WHERE id = :id
+        ");
+    $del->execute(['id' => $eventId]);
+
+    return true;
 }
 
 ?>

@@ -8,6 +8,9 @@ require_once __DIR__ . '/src/router.php';
 require_once __DIR__ . '/src/controllers/auth_controller.php';
 require_once __DIR__ . '/src/controllers/event_controller.php';
 require_once __DIR__ . '/src/controllers/slots_controller.php';
+require_once __DIR__ . '/src/controllers/interests_controller.php';
+require_once __DIR__ . '/src/controllers/faculty_controller.php';
+require_once __DIR__ . '/src/controllers/hall_controller.php';
 
 register_global_error_handlers();
 
@@ -54,9 +57,24 @@ $router->post('/auth/register', [AuthController::class, 'register']);
 $router->post('/auth/logout', [AuthController::class, 'logout']);
 $router->get('/auth/me', [AuthController::class, 'me']); 
 $router->get('/auth/check_logged_in', [AuthController::class, 'checkLoggedIn']);
-$router->get('/home', [EventController::class, 'home']);
+$router->get('/events', [EventController::class, 'events']);
 $router->post('/event_preference', [EventController::class, 'event_preference']);
 $router->get('/available_slots', [SlotController::class, 'available_slots']);
 $router->post('/register_event', [EventController::class, 'register_event']);
+$router->get('/interests', [InterestController::class, 'interests']);
+$router->post('/events/interest', [InterestController::class, 'set_interest']);
+$router->get('/faculties', [FacultyController::class, 'index']);
+$router->get('/halls', [HallController::class, 'index']);
+$router->get('/slots', [SlotController::class, 'slots']); 
+$router->get('/slots/events', [SlotController::class, 'slot_events']);
+$router->get('/slot_dates', [SlotController::class, 'slot_dates']);
+$router->get('/slot_halls', [SlotController::class, 'slot_halls']);
+$router->get('/events_by_slot', [SlotController::class, 'events_by_slot']);
+$router->get('/event', [EventController::class, 'event']);
+$router->get('/event_attendees', [EventController::class, 'attendees']);
+$router->get('/event_comments', [EventController::class, 'comments']);
+$router->post('/event_comments', [EventController::class, 'add_comment']);
+$router->post('/slots', [SlotController::class, 'create']);
+$router->put('/event', [EventController::class, 'update']);
 
 $router->dispatch($method, $path);

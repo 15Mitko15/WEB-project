@@ -1,4 +1,5 @@
 import { authService } from "../services/auth-service.js";
+import { createAsyncAction } from "../hooks/async.js";
 import { Button } from "../components/button.js";
 import { Input } from "../components/input.js";
 import { Card } from "../components/card.js";
@@ -25,7 +26,7 @@ export function renderLoginPage(rootEl) {
   // Message area
   const error = document.createElement("div");
   error.className = "message message--error";
-  error.style.display = "none"; // hidden until used
+  error.style.display = "none";
   error.id = "out";
 
   // Form
@@ -57,15 +58,40 @@ export function renderLoginPage(rootEl) {
 
   slot.append(card, error);
 
-  // submit handler
-  form.addEventListener("submit", async (e) => {
+  const loginAction = createAsyncAction(async (email, password) => {
+    return await authService.login(email, password);
+  });
+
+  const unsubscribe = loginAction.subscribe((s) => {
+    if (s.status === "idle") {
+      setLoading(submitBtn, false);
+      return;
+    }
+
+    if (s.status === "loading") {
+      setLoading(submitBtn, true, "Creating account...");
+      return;
+    }
+
+    if (s.status === "error") {
+      setLoading(submitBtn, false);
+      showMessage(error, s.error?.message || "Wrong email or password");
+      return;
+    }
+
+    if (s.status === "success") {
+      setLoading(submitBtn, false);
+      window.location.hash = "#/";
+    }
+  });
+
+  async function onSubmit(e) {
     e.preventDefault();
 
     const email = String(emailInput.value || "").trim();
     const password = String(passInput.value || "");
 
     const missingFields = [];
-
     if (!email) missingFields.push("email");
     if (!password) missingFields.push("password");
 
@@ -74,15 +100,13 @@ export function renderLoginPage(rootEl) {
       return;
     }
 
-    setLoading(submitBtn, true);
-    showMessage(error, "Logging in...", { muted: true });
+    await loginAction.run(email, password);
+  }
 
-    try {
-      await authService.login(email, password);
-      window.location.hash = "#/";
-    } catch (err) {
-      showMessage(error, err?.message || "Wrong email or password");
-      setLoading(submitBtn, false);
-    }
-  });
+  form.addEventListener("submit", onSubmit);
+
+  return () => {
+    unsubscribe();
+    form.removeEventListener("submit", onSubmit);
+  };
 }

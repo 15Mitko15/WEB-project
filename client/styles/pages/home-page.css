@@ -236,3 +236,132 @@
     align-self: flex-start;
   }
 }
+.event-title-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.event-title-link:hover {
+  text-decoration: underline;
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+.search {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.search-input {
+  width: 220px;
+  max-width: 42vw;
+  padding: 0.42rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: white;
+}
+
+.export {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 520px) {
+  .search-input {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+.event-row {
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.04);
+  transition: transform 0.12s ease, box-shadow 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.event-row:hover {
+  transform: translateY(-1px);
+  border-color: rgba(99, 102, 241, 0.25);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.07);
+}
+
+/* Date badge look */
+.event-date {
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+/* Slightly nicer typography */
+.event-title {
+  font-size: 1.05rem;
+}
+
+.event-author {
+  opacity: 0.7;
+}
+
+/* Allow desc to show a bit more space on larger screens */
+@media (min-width: 680px) {
+  .event-desc {
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+}
+
+/* =========================================
+   Pagination styling (slightly softer)
+   ========================================= */
+
+.page-btn,
+.page-number {
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.page-number.active {
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+/* event actions: dropdown + edit */
+.event-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.event-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text);
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.event-edit:hover {
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+  text-decoration: none;
+}
+
+.event-edit-icon {
+  line-height: 1;
+}

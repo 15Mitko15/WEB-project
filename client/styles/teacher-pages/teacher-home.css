@@ -1,0 +1,96 @@
+.teacher-hero {
+  padding: 14px 16px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.teacher-title {
+  margin: 0;
+  font-size: 1.6rem;
+  line-height: 1.1;
+}
+
+.teacher-subtitle {
+  margin: 8px 0 0 0;
+  opacity: 0.8;
+}
+
+.teacher-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.teacher-card {
+  display: block;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.06);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 120ms ease, box-shadow 120ms ease,
+    border-color 120ms ease;
+}
+
+.teacher-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(0, 0, 0, 0.16);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.08);
+}
+
+.teacher-card__title {
+  font-weight: 900;
+  font-size: 1.05rem;
+  margin-bottom: 6px;
+}
+
+.teacher-card__desc {
+  opacity: 0.8;
+  line-height: 1.4;
+}
+
+.teacher-card__cta {
+  margin-top: 12px;
+  font-weight: 800;
+  opacity: 0.9;
+}
+
+.teacher-card--danger {
+  border-color: rgba(220, 38, 38, 0.22);
+  background: rgba(255, 245, 245, 0.85);
+}
+
+/* Make teacher dashboard cards bigger */
+.teacher-grid {
+  gap: 18px; /* more space between cards */
+}
+
+.teacher-card {
+  padding: 22px; /* bigger inside spacing */
+  min-height: 140px; /* makes them feel larger even with short text */
+  border-radius: 18px; /* slightly rounder */
+}
+
+/* Optional: slightly bigger text */
+.teacher-card__title {
+  font-size: 1.12rem;
+}
+
+.teacher-card__desc {
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+
+.teacher-card__cta {
+  margin-top: 14px;
+  font-size: 0.98rem;
+}
+
+@media (max-width: 800px) {
+  .teacher-grid {
+    grid-template-columns: 1fr;
+  }
+}

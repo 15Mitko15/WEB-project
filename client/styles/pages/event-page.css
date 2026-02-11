@@ -1,0 +1,385 @@
+/* ============================
+   Event Page – Modern Redesign (Clean)
+   ============================ */
+
+/* Make this page wider than the global .container max-width:1000px */
+.container.container--wide {
+  max-width: 1600px; /* set your desired max width */
+  width: min(1600px, 100%);
+  margin: 70px auto 0; /* keeps your existing 70px top spacing */
+  padding: 26px 22px 46px;
+}
+
+/* Page spacing */
+.event-page {
+  display: grid;
+  gap: 18px;
+}
+
+/* HERO */
+.event-hero {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(10px);
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.06),
+    0 1px 0 rgba(255, 255, 255, 0.65) inset;
+}
+
+.event-hero__top {
+  display: grid;
+  grid-template-columns: 1.6fr 0.9fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.event-title-xl {
+  margin: 0;
+  font-size: clamp(1.6rem, 1.2rem + 1.2vw, 2.25rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.event-meta {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.03);
+  font-size: 0.92rem;
+}
+
+.event-hero__side {
+  display: grid;
+  gap: 12px;
+}
+
+.event-presenter,
+.stat {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.75);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.05);
+}
+
+.presenter-name {
+  font-weight: 800;
+  margin-top: 6px;
+  font-size: 1.05rem;
+}
+
+.event-stats {
+  display: grid;
+  gap: 10px;
+}
+
+.stat {
+  text-align: left;
+  display: grid;
+  gap: 6px;
+}
+
+.stat__num {
+  font-weight: 900;
+  font-size: 1.5rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.stat__label {
+  opacity: 0.7;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.event-description {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.muted-sm {
+  opacity: 0.7;
+  font-size: 0.9rem;
+}
+
+.event-description-full {
+  margin: 8px 0 0 0;
+  line-height: 1.7;
+  font-size: 1.02rem;
+  white-space: pre-wrap;
+}
+
+/* Layout columns */
+.event-layout {
+  display: grid;
+  grid-template-columns: 1.75fr 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.event-sidecol {
+  position: sticky;
+  top: 16px;
+}
+
+/* Cards (attendees/comments) */
+.event-page .card {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.event-page .card__header {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.event-page .card__body {
+  padding: 16px;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tab {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.75);
+  padding: 9px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.94rem;
+  transition: transform 120ms ease, background 120ms ease,
+    border-color 120ms ease;
+}
+
+.tab:hover {
+  transform: translateY(-1px);
+  border-color: rgba(0, 0, 0, 0.18);
+}
+
+.tab.is-active {
+  font-weight: 800;
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+.tab__count {
+  opacity: 0.75;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.03);
+}
+
+/* Attendees */
+.people-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.people-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Comments */
+/* ============================
+   Comments – lighter + clearer nesting
+   Paste at END of event-page.css
+   ============================ */
+
+/* More breathing room in the list */
+.comments {
+  display: grid;
+  gap: 16px; /* space between top-level comments */
+}
+
+/* Each comment becomes a “thread card” with room */
+.comment {
+  position: relative;
+  margin-top: 8px; /* adds space even when nested */
+  padding: 14px 14px 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.04);
+}
+
+/* Better spacing inside comment */
+.comment__meta {
+  margin-bottom: 10px;
+  gap: 10px;
+}
+
+.comment__body {
+  line-height: 1.65;
+  font-size: 0.98rem;
+}
+
+/* Make actions less bulky */
+.comment__actions {
+  margin-top: 10px;
+}
+
+/* --- Nested replies: clear thread rail + spacing --- */
+
+/* Give nested replies bigger vertical spacing */
+.comment .comment {
+  margin-top: 14px; /* this fixes “0 margin between replies” */
+}
+
+/* Visual “thread rail” for any nested comment */
+.comment .comment::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: 14px;
+  bottom: 14px;
+  width: 3px;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.25);
+}
+
+/* Small “connector” line from parent into child */
+.comment .comment::after {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: 26px;
+  width: 12px;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.25);
+}
+
+/* Slightly different background for nested levels */
+.comment .comment {
+  background: rgba(255, 255, 255, 0.78);
+  border-color: rgba(0, 0, 0, 0.07);
+}
+
+/* A bit more subtle for deeper nesting */
+.comment .comment .comment {
+  background: rgba(255, 255, 255, 0.72);
+}
+.comment .comment .comment::before,
+.comment .comment .comment::after {
+  background: rgba(16, 185, 129, 0.22); /* change rail tone deeper */
+}
+
+/* Even deeper: softer and smaller */
+.comment .comment .comment .comment {
+  background: rgba(255, 255, 255, 0.68);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.03);
+}
+
+/* Reduce the “bulky” feeling by scaling padding for nested */
+.comment .comment {
+  padding: 12px 12px 10px 12px;
+  border-radius: 14px;
+}
+.comment .comment .comment {
+  padding: 11px 11px 9px 11px;
+}
+
+/* Optional: make the timestamp less dominant */
+.comment__time {
+  opacity: 0.6;
+  font-size: 0.86rem;
+}
+
+/* Optional: make author line clearer */
+.comment__meta strong {
+  font-weight: 800;
+}
+
+/* Replies form: give it separation and lighter look */
+.reply-form {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.linkbtn {
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  padding: 0;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.linkbtn:hover {
+  text-decoration: underline;
+}
+
+.linkbtn:focus-visible {
+  outline: 2px solid rgba(99, 102, 241, 0.45);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.event-page textarea.textarea,
+.event-page .textarea {
+  width: 100%;
+  border-radius: 14px;
+  padding: 12px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.event-page hr {
+  border: 0;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.08);
+  margin: 10px 0;
+}
+
+/* Responsive */
+@media (max-width: 980px) {
+  .container.container--wide {
+    padding: 18px 14px 30px;
+  }
+
+  .event-hero__top {
+    grid-template-columns: 1fr;
+  }
+
+  .event-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .event-sidecol {
+    position: static;
+  }
+}

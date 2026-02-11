@@ -33,7 +33,6 @@ class HTTPService {
     }`;
 
     let res;
-    console.log(body);
     try {
       res = await fetch(reqUrl, {
         method,

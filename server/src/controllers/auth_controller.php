@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../services/auth_service.php';
 require_once __DIR__ . '/../services/user_service.php';
+require_once __DIR__ . '/controller-helpers.php';
 
 final class AuthController
 {
@@ -16,7 +17,7 @@ final class AuthController
 
     public function login(): void
     {
-        $data = $this->readInput();
+        $data = readInput();
 
         $email = trim((string)($data['email'] ?? ''));
         $password = (string)($data['password'] ?? '');
@@ -35,7 +36,7 @@ final class AuthController
             throw new UnauthorizedException('Invalid email or password.');
         }
 
-        $this->json(200, [
+        json(200, [
             'ok' => true,
             'message' => 'Login successful.',
             'user' => $user->toPublicArray(),
@@ -44,7 +45,7 @@ final class AuthController
 
     public function register(): void
     {
-        $data = $this->readInput();
+        $data = readInput();
 
         $fullName = trim((string)($data['name'] ?? ''));
         $email = trim((string)($data['email'] ?? ''));
@@ -76,7 +77,7 @@ final class AuthController
             throw new RuntimeException('Registration failed.');
         }
 
-        $this->json(201, [
+        json(201, [
             'ok' => true,
             'message' => 'Registration successful.',
         ]);
@@ -94,7 +95,7 @@ final class AuthController
             session_destroy();
         }
 
-        $this->json(200, [
+        json(200, [
             'ok' => true,
             'message' => 'Logged out.',
         ]);
@@ -104,7 +105,7 @@ final class AuthController
     {
         $loggedIn = check_logged_in();
 
-        $this->json(200, [
+        json(200, [
             'ok' => true,
             'logged_in' => $loggedIn,
             'user_email' => $loggedIn ? ($_SESSION['user_email'] ?? null) : null,
@@ -112,50 +113,25 @@ final class AuthController
     }
 
     public function me(): void
-{
-    if (!check_logged_in()) {
-        throw new UnauthorizedException('Not logged in.');
-    }
-
-    $userId = (int)($_SESSION['user_id'] ?? 0);
-    if ($userId <= 0) {
-        throw new UnauthorizedException('Session is missing user.');
-    }
-
-    $user = find_user_by_id($this->conn, $userId);
-    if ($user === null) {
-        // Session refers to user that no longer exists
-        throw new UnauthorizedException('User not found.');
-    }
-
-    $this->json(200, [
-        'ok' => true,
-        'user' => $user->toPublicArray(),
-    ]);
-}
-
-
-    // ---------- helpers ----------
-
-    private function json(int $statusCode, array $payload): void
     {
-        http_response_code($statusCode);
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode($payload);
-    }
-
-    private function readInput(): array
-    {
-        $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
-
-        if (stripos($contentType, 'application/json') !== false) {
-            $raw = file_get_contents('php://input');
-            $decoded = json_decode($raw ?: '', true);
-            return is_array($decoded) ? $decoded : [];
+        if (!check_logged_in()) {
+            throw new UnauthorizedException('Not logged in.');
         }
 
-        if (!empty($_POST)) return $_POST;
+        $userId = (int)($_SESSION['user_id'] ?? 0);
+        if ($userId <= 0) {
+            throw new UnauthorizedException('Session is missing user.');
+        }
 
-        return $_GET ?? [];
+        $user = find_user_by_id($this->conn, $userId);
+        if ($user === null) {
+            // Session refers to user that no longer exists
+            throw new UnauthorizedException('User not found.');
+        }
+
+        json(200, [
+            'ok' => true,
+            'user' => $user->toPublicArray(),
+        ]);
     }
 }
