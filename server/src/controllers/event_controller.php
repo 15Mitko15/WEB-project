@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../services/event_service.php';
+require_once __DIR__ . '/../services/interests_service.php';
 require_once __DIR__ . '/../services/slots_service.php';
 require_once __DIR__ . '/../services/comment_service.php';
 require_once __DIR__ . '/controller-helpers.php';
@@ -199,6 +200,36 @@ final class EventController
         'event' => $updated,
     ]);
 }
+
+    public function delete(): void
+    {
+        if (!check_logged_in()) {
+        throw new UnauthorizedException('Not logged in.');
+        }
+
+        $userId = (int)($_SESSION['user_id'] ?? 0);
+        if ($userId <= 0) {
+            throw new UnauthorizedException('Session is missing user.');
+        }
+
+        $eventId = (int)($_GET['id'] ?? 0);
+        if ($eventId <= 0) {
+            throw new BadRequestException('Event id is required.');
+        }
+
+        $deleted_permisions = delete_event($this->conn, $eventId, $userId);
+
+        if (!$deleted_permisions){
+
+        }
+
+        $deleted = delete_event_interest($this->conn, $eventId);
+
+        json(200, [
+            'ok' => true,
+            'event' => $deleted,
+        ]);
+    }
 
 
 }

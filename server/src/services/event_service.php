@@ -405,4 +405,32 @@ function update_event(PDO $conn, int $eventId, array $payload, int $actorUserId)
     return $updated;
 }
 
+function delete_event(PDO $conn, int $eventId, int $userId): bool
+{
+    $sql = "SELECT  presenter_id
+            FROM events 
+            WHERE id = :user_id";
+    $stmt = $conn->prepare($sql);
+    $stmt->execute(['user_id' => $userId]);
+
+    if($stmt->rowCount() == 0){
+        throw new BadRequestException('Event not found.');
+    }
+
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $roleId = events_get_role_id($conn, $actorUserId);
+
+    if ($userId !== $row['presenter_id'] && $roleId !== 2) {
+        throw new UnauthorizedException('Forbidden.');
+    }
+
+    $del = $conn->prepare("
+            DELETE FROM events
+            WHERE id = :id
+        ");
+    $del->execute(['id' => $eventId]);
+
+    return true;
+}
+
 ?>

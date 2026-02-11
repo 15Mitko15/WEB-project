@@ -63,3 +63,12 @@ function set_event_interest(PDO $conn, int $userId, int $eventId, int $interestI
     return "updated entry";
 }
 
+function delete_event_interest(PDO $conn, int $eventId): string
+{
+    $del = $conn->prepare("
+            DELETE FROM attendings
+            WHERE event_id = :eid
+        ");
+    $del->execute(['eid' => $eventId]);
+    return "deleted entries";
+}
