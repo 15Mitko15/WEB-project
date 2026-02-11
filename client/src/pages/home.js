@@ -232,7 +232,7 @@ export function renderHome(container) {
     const items = getVisibleEventsAllPages();
 
     const rows = [
-      ["Title", "Date", "Time", "Presenter", "Faculty", "Hall", "Description"],
+      ["Title", "Date", "Time", "Presenter", "Faculty", "Hall"],
       ...items.map((ev) => {
         const d = new Date(ev.datetime || ev.date);
         const date = Number.isFinite(d.getTime()) ? d.toLocaleDateString() : "";
@@ -254,7 +254,6 @@ export function renderHome(container) {
           presenter,
           ev.faculty ?? "",
           ev.hall ?? "",
-          ev.event_description ?? ev.description ?? "",
         ];
       }),
     ];
