@@ -306,7 +306,79 @@ INSERT INTO slots (
     CURRENT_TIMESTAMP()
 );
 
+INSERT INTO slots (
+    hall_id, 
+    slot_date, 
+    start_time, 
+    end_time, 
+    duration_minutes, 
+    created_at, 
+    updated_at
+) VALUES (
+    3, 
+    '2025-12-29', 
+    '9:30:00', 
+    '13:30:00', 
+    15, 
+    CURRENT_TIMESTAMP(), 
+    CURRENT_TIMESTAMP()
+);
+
+INSERT INTO slots (
+    hall_id, 
+    slot_date, 
+    start_time, 
+    end_time, 
+    duration_minutes, 
+    created_at, 
+    updated_at
+) VALUES (
+    2, 
+    '2025-12-28', 
+    '10:30:00', 
+    '12:30:00', 
+    15, 
+    CURRENT_TIMESTAMP(), 
+    CURRENT_TIMESTAMP()
+);
+
 -- Events
+INSERT INTO events (
+    event_datetime, 
+    hall_id, 
+    presenter_id, 
+    title, 
+    event_description, 
+    created_at, 
+    updated_at
+) VALUES (
+    '2025-12-29 10:00:00',
+    3,
+    2, 
+    'Last christmas',
+    'Last christmas, i gave you my heart but the very next day you gave it away',
+    CURRENT_TIMESTAMP(), 
+    CURRENT_TIMESTAMP()
+);
+
+INSERT INTO events (
+    event_datetime, 
+    hall_id, 
+    presenter_id, 
+    title, 
+    event_description, 
+    created_at, 
+    updated_at
+) VALUES (
+    '2025-12-28 11:00:00',
+    2,
+    3, 
+    'Happy new year',
+    'Happy new year wishing you all the best and most wonderful times',
+    CURRENT_TIMESTAMP(), 
+    CURRENT_TIMESTAMP()
+);
+
 INSERT INTO events (
     event_datetime, 
     hall_id, 
